@@ -1,0 +1,33 @@
+{
+  "name": "bebras-server-modules",
+  "version": "1.0.0",
+  "description": "Server-side modules to be used by bebras tasks",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.141.0",
+    "express": "^4.16.2",
+    "fs-extra": "^4.0.2",
+    "jsonwebtoken": "^8.1.0",
+    "lodash": "^4.17.4",
+    "mime": "^2.0.3",
+    "mri": "^1.1.0",
+    "mysql": "^2.15.0",
+    "mysql-migrations": "^1.0.4",
+    "node-env-file": "^0.1.8",
+    "uuid": "^3.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/France-ioi/bebras-server-modules.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/France-ioi/bebras-server-modules/issues"
+  },
+  "homepage": "https://github.com/France-ioi/bebras-server-modules#readme"
+}
