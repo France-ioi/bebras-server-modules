@@ -40,9 +40,9 @@ function actionParams(body, handler, callback) {
             return callback(new Error('Missed param: ' + p))
         }
         if(validators[p]) {
-            var valid = validators[p](body[p])
-            if(valid !== true) {
-                return callback(new Error(valid))
+            var validation = validators[p](body[p])
+            if(validation !== true) {
+                return callback(validation)
             }
         }
         res[p] = body[p]
@@ -75,7 +75,7 @@ function verifyBody(body, handler, callback) {
             args.random_seed = task.random_seed
 
             if(!handler.actions[body.action]) {
-                return callback(new Error('Wrong task token'))
+                return callback(new Error('Invalid action'))
             }
 
             actionParams(body, handler, (error, params) => {

@@ -19,11 +19,11 @@ module.exports = {
 
     validators: {
         key: function(v) {
-            return v && v.length && v.length < 255 ? true : 'Invalid key format'
+            return v && v.length && v.length < 255 ? true : new Error('Invalid key format')
         },
 
         data: function(v) {
-            return v && v.length ? true : 'Invalid data format'
+            return v && v.length ? true : new Error('Invalid data format')
         }
     },
 

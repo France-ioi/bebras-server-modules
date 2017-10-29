@@ -6,15 +6,15 @@ module.exports = {
 
     validators: {
         key: function(v) {
-            return v && v.length && v.length < 255 ? true : 'Invalid key format'
+            return v && v.length && v.length < 255 ? true : new Error('Invalid key format')
         },
 
         value: function(v) {
-            return v && v.length ? true : 'Invalid value format'
+            return v && v.length ? true : new Error('Invalid value format')
         },
 
         duration: function(v) {
-            return v == parseInt(v, 10) && v >= 0 ? true : 'Invalid duration format'
+            return v == parseInt(v, 10) && v >= 0 ? true : new Error('Invalid duration format')
         }
     },
 
