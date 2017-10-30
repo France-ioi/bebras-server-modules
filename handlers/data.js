@@ -33,9 +33,14 @@ module.exports = {
             var sql = 'SELECT `value` FROM `data` WHERE `task_id`=? AND `random_seed`=? AND `key`=? LIMIT 1'
             var values = [args.task_id, args.random_seed, args.key]
             db.query(sql, values, (rows) => {
-                callback(false, {
-                    value: rows.length ? rows[0].value : null
-                })
+                if(rows.length) {
+                    callback(false, {
+                        data: rows[0].value
+                    })
+                } else {
+                    callback(new Error('Data not found'))
+                }
+
             })
         },
 

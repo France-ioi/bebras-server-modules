@@ -60,7 +60,7 @@ module.exports = {
                             var values = [args.task_id, args.random_seed, args.key, path, path]
                             db.query(sql, values, () => {
                                 callback(false, {
-                                    url: storage.url(path)
+                                    data: storage.url(path)
                                 })
                             })
                         })
@@ -72,9 +72,13 @@ module.exports = {
 
         url: function(args, callback) {
             get(args, (row) => {
-                callback(false, {
-                    url: row ? storage.url(row.path) : null
-                })
+                if(row) {
+                    callback(false, {
+                        data: row ? storage.url(row.path) : null
+                    })
+                } else {
+                    callback(new Error('Data not found'))
+                }
             })
         },
 
