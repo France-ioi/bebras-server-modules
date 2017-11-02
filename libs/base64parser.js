@@ -5,7 +5,7 @@ module.exports = {
         var regex = /^data:(.+);base64,(.*)$/
         var m = data.match(regex)
         if(!m || m.length != 3) {
-            callback(new Error('Can\'t parse base64 data'))
+            return callback(new Error('Can\'t parse base64 data'))
         }
         callback(false, {
             ext: mime.getExtension(m[1]),
