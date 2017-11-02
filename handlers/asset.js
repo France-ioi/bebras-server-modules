@@ -43,7 +43,7 @@ module.exports = {
                 storage.remove(row ? row.path : null, () => {
                     base64parser.createBuffer(args.data, (error, file) => {
                         if(error) {
-                            return callback(error.message)
+                            return callback(error)
                         }
                         var path = args.task_id + '/' + uuid.v4() + '.' + file.ext
 
