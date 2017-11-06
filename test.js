@@ -1,10 +1,26 @@
-var jwt = require('jsonwebtoken');
-var key = 'buddy';
+var jwt = require('jsonwebtoken')
+var key = 'buddy'
 
-var token = jwt.sign({ task_id: 1, random_seed: 1}, key);
-console.log(token);
+/*
+// task
+var data = {
+    id: 1,
+    random_seed: 1,
+    hintsRequested: {
+        a: 'a',
+        b: 'b'
+    }
+}
+*/
+// answer
+var data = {
+    test_answer_value: 'test'
+}
+
+var token = jwt.sign(data, key)
+console.log(token)
 
 jwt.verify(token, key, function(err, decoded) {
-    console.error(err);
+    err && console.error(err)
     console.log(decoded)
 });

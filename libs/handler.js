@@ -30,7 +30,7 @@ function resultError(error) {
 }
 
 
-function actionParams(body, handler, callback) {
+function actionParams(body, handler, platform, callback) {
     var params = handler.params[body.action] || []
     var validators = handler.validators || {}
     var res = {}
@@ -40,14 +40,27 @@ function actionParams(body, handler, callback) {
             return callback(new Error('Missed param: ' + p))
         }
         if(validators[p]) {
-            var validation = validators[p](body[p])
-            if(validation !== true) {
-                return callback(validation)
+            var value = validators[p](body[p], platform)
+            if(value instanceof Error) {
+                return callback(value)
             }
+            res[p] = value
+        } else {
+            res[p] = body[p]
         }
-        res[p] = body[p]
     }
     callback(false, res)
+}
+
+
+function validateTask(task, callback) {
+    if(!Number.isInteger(task.id) || task.id < 0) {
+        return callback(new Error('Task token.id must be an integer, greater than 0'))
+    }
+    if(!Number.isInteger(task.random_seed) || task.random_seed < 0) {
+        return callback(new Error('Task token.random_seed must be an integer, greater than 0'))
+    }
+    callback()
 }
 
 
@@ -58,33 +71,35 @@ function verifyBody(body, handler, callback) {
         if(error) {
             return callback(error)
         }
+
+        args.platform = platform
+
         jwt.verify(body.token, platform.public_key, (error, task) => {
             if(error) {
                 return callback(error)
             }
 
-
-            if(!Number.isInteger(task.task_id) || task.task_id < 0) {
-                return callback(new Error('token.task_id must be an integer, greater than 0'))
-            }
-            args.task_id = task.task_id
-
-            if(!Number.isInteger(task.random_seed) || task.random_seed < 0) {
-                return callback(new Error('token.random_seed must be an integer, greater than 0'))
-            }
-            args.random_seed = task.random_seed
-
-            if(!handler.actions[body.action]) {
-                return callback(new Error('Invalid action'))
-            }
-
-            actionParams(body, handler, (error, params) => {
+            validateTask(task, (error) => {
                 if(error) {
                     return callback(error)
                 }
-                args = _.extend(args, params)
-                callback(false, body.action, args)
+
+                args.task = task
+
+                if(!handler.actions[body.action]) {
+                    return callback(new Error('Invalid action'))
+                }
+
+                actionParams(body, handler, platform, (error, params) => {
+                    if(error) {
+                        return callback(error)
+                    }
+                    args = _.extend(args, params)
+                    callback(false, body.action, args)
+                })
+
             })
+
         })
     })
 }

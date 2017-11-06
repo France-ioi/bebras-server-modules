@@ -6,7 +6,7 @@ var base64parser = require('../libs/base64parser')
 
 function get(args, callback) {
     var sql = 'SELECT * FROM `assets` WHERE `task_id`=? AND `random_seed` = ? AND `key`=? LIMIT 1'
-    var values = [args.task_id, args.random_seed, args.key]
+    var values = [args.task.id, args.task.random_seed, args.key]
     db.query(sql, values, (rows) => {
         callback(rows.length ? rows[0] : null)
     })
@@ -19,11 +19,11 @@ module.exports = {
 
     validators: {
         key: function(v) {
-            return v && v.length && v.length < 255 ? true : new Error('Invalid key format')
+            return v && v.length && v.length < 255 ? v : new Error('Invalid key format')
         },
 
         data: function(v) {
-            return v && v.length ? true : new Error('Invalid data format')
+            return v && v.length ? v : new Error('Invalid data format')
         }
     },
 
@@ -45,7 +45,7 @@ module.exports = {
                         if(error) {
                             return callback(error)
                         }
-                        var path = args.task_id + '/' + uuid.v4() + '.' + file.ext
+                        var path = args.task.id + '/' + uuid.v4() + '.' + file.ext
 
                         storage.write(path, file.buffer, (error) => {
                             if(error) {
@@ -57,7 +57,7 @@ module.exports = {
                                 (?, ?, ?, ?)\
                                 ON DUPLICATE KEY UPDATE\
                                 `path` = ?'
-                            var values = [args.task_id, args.random_seed, args.key, path, path]
+                            var values = [args.task.id, args.task.random_seed, args.key, path, path]
                             db.query(sql, values, () => {
                                 callback(false, {
                                     data: storage.url(path)
@@ -88,7 +88,7 @@ module.exports = {
                 if(row) {
                     storage.remove(row.path, () => {
                         var sql = 'DELETE FROM `assets` WHERE `task_id`=? AND `random_seed`=? AND `key`=? LIMIT 1'
-                        var values = [args.task_id, args.random_seed, args.key]
+                        var values = [args.task.id, args.task.random_seed, args.key]
                         db.query(sql, values, () => {
                             callback(false, {})
                         })
@@ -101,12 +101,12 @@ module.exports = {
 
 
         empty: function(args, callback) {
-            storage.remove(args.task_id, (error) => {
+            storage.remove(args.task.id, (error) => {
                 if(error) {
                     return callback(error)
                 }
                 var sql = 'DELETE FROM `assets` WHERE `task_id`=?'
-                var values = [args.task_id]
+                var values = [args.task.id]
                 db.query(sql, values, () => {
                     callback(false, {})
                 })

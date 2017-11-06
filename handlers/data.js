@@ -6,15 +6,15 @@ module.exports = {
 
     validators: {
         key: function(v) {
-            return v && v.length && v.length < 255 ? true : new Error('Invalid key format')
+            return v && v.length && v.length < 255 ? v : new Error('Invalid key format')
         },
 
         value: function(v) {
-            return v && v.length ? true : new Error('Invalid value format')
+            return v && v.length ? v : new Error('Invalid value format')
         },
 
         duration: function(v) {
-            return v == parseInt(v, 10) && v >= 0 ? true : new Error('Invalid duration format')
+            return v == parseInt(v, 10) && v >= 0 ? v : new Error('Invalid duration format')
         }
     },
 
@@ -31,7 +31,7 @@ module.exports = {
 
         read: function(args, callback) {
             var sql = 'SELECT `value` FROM `data` WHERE `task_id`=? AND `random_seed`=? AND `key`=? LIMIT 1'
-            var values = [args.task_id, args.random_seed, args.key]
+            var values = [args.task.id, args.task.random_seed, args.key]
             db.query(sql, values, (rows) => {
                 if(rows.length) {
                     callback(false, {
@@ -52,7 +52,7 @@ module.exports = {
                 (?, ?, ?, ?, ?)\
                 ON DUPLICATE KEY UPDATE\
                 `value` = ?, `duration` = ?'
-            var values = [args.task_id, args.random_seed, args.key, args.value, args.duration, args.value, args.duration]
+            var values = [args.task.id, args.task.random_seed, args.key, args.value, args.duration, args.value, args.duration]
             db.query(sql, values, () => {
                 callback(false, {})
             })
@@ -61,7 +61,7 @@ module.exports = {
 
         delete: function(args, callback) {
             var sql = 'DELETE FROM `data` WHERE `task_id`=? AND `random_seed`=? AND `key`=? LIMIT 1'
-            var values = [args.task_id, args.random_seed, args.key]
+            var values = [args.task.id, args.task.random_seed, args.key]
             db.query(sql, values, () => {
                 callback(false, {})
             })
@@ -70,7 +70,7 @@ module.exports = {
 
         empty: function(args, callback) {
             var sql = 'DELETE FROM `data` WHERE `task_id`=?'
-            var values = [args.task_id]
+            var values = [args.task.id]
             db.query(sql, values, () => {
                 callback(false, {})
             })
