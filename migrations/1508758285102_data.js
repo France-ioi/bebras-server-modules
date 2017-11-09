@@ -1,7 +1,7 @@
 module.exports = {
     "up": "CREATE TABLE `data` (\
         `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,\
-        `task_id` int unsigned NOT NULL,\
+        `task_id` varchar(255) NOT NULL,\
         `random_seed` int unsigned NOT NULL,\
         `key` varchar(255) NOT NULL,\
         `value` text NOT NULL,\
