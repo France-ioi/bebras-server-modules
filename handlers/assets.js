@@ -15,7 +15,7 @@ function get(args, callback) {
 
 module.exports = {
 
-    path: '/asset',
+    path: '/assets',
 
     validators: {
         key: function(v) {

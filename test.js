@@ -1,21 +1,23 @@
 var jwt = require('jsonwebtoken')
 var key = 'buddy'
 
-/*
 // task
 var data = {
-    id: 1,
+    id: 'test-server-modules',
     random_seed: 1,
     hintsRequested: {
         a: 'a',
         b: 'b'
     }
 }
-*/
+/*
 // answer
 var data = {
     test_answer_value: 'test'
 }
+*/
+
+
 
 var token = jwt.sign(data, key)
 console.log(token)

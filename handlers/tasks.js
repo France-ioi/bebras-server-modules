@@ -1,7 +1,7 @@
 var jwt = require('jsonwebtoken')
 var path = require('path')
 var fs = require('fs')
-var keys = require('../config/keys')
+var config = require('../config/tasks')
 
 
 //TODO: watch tasks dir and reset modules cache?
@@ -14,7 +14,7 @@ function requireUncached(module){
 
 
 function callTask(method, args, callback) {
-    var file = path.resolve(process.cwd(), 'tasks/' + args.task.id + '.js')
+    var file = path.resolve(process.cwd(), config.path + '/' + args.task.id + '.js')
     fs.access(file, (fs.constants || fs).R_OK, (error) => {
         if(error) {
             return callback(new Error('Task not found'))
@@ -24,7 +24,7 @@ function callTask(method, args, callback) {
             try {
                 var data = task[method](args)
                 if(method == 'gradeAnswer') {
-                    data.token = jwt.sign(data, keys.answer_token)
+                    data.token = jwt.sign(data, config.answer_key)
                 }
                 return callback(false, { data })
             } catch(error) {
@@ -39,7 +39,7 @@ function callTask(method, args, callback) {
 
 module.exports = {
 
-    path: '/task',
+    path: '/tasks',
 
     validators: {
         answer_token: function(v, platform) {
