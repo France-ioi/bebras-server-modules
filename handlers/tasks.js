@@ -29,16 +29,6 @@ function loadTask(task_id, method, callback) {
 }
 
 
-function taskDataCache(task, callback) {
-    data.read(task, 'taskData', function(error, data) {
-        if(error) {
-            task.taskData()
-            // return callback(error)
-        }
-    })
-}
-
-
 
 module.exports = {
 
