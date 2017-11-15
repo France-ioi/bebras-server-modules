@@ -55,10 +55,11 @@ function actionParams(body, handler, platform, callback) {
 
 
 function validateTask(task, callback) {
-    if(typeof task.id !== 'number' && typeof task.id !== 'string') {
-        return callback(new Error('Task id must be an integer or string'))
+    if(!task.id) {
+        return callback(new Error('Task id missed'))
     }
     task.id = task.id.toString()
+    task.random_seed = parseInt(task.random_seed, 10)
     if(!Number.isInteger(task.random_seed) || task.random_seed < 0) {
         return callback(new Error('Task random_seed must be an integer, greater than 0'))
     }
