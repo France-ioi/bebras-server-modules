@@ -1,4 +1,4 @@
-var db = require('../libs/db')
+var data = require('../repositories/data')
 
 module.exports = {
 
@@ -30,50 +30,22 @@ module.exports = {
     actions: {
 
         read: function(args, callback) {
-            var sql = 'SELECT `value` FROM `data` WHERE `task_id`=? AND `random_seed`=? AND `key`=? LIMIT 1'
-            var values = [args.task.id, args.task.random_seed, args.key]
-            db.query(sql, values, (rows) => {
-                if(rows.length) {
-                    callback(false, {
-                        data: rows[0].value
-                    })
-                } else {
-                    callback(new Error('Data not found'))
-                }
-
-            })
+            data.read(args.task, args.key, callback)
         },
 
 
         write: function(args, callback) {
-            var sql = 'INSERT INTO `data`\
-                (`task_id`, `random_seed`, `key`, `value`, `duration`)\
-                VALUES\
-                (?, ?, ?, ?, ?)\
-                ON DUPLICATE KEY UPDATE\
-                `value` = ?, `duration` = ?'
-            var values = [args.task.id, args.task.random_seed, args.key, args.value, args.duration, args.value, args.duration]
-            db.query(sql, values, () => {
-                callback(false, {})
-            })
+            data.write(args.task, args.key, args.value, args.duration, callback)
         },
 
 
         delete: function(args, callback) {
-            var sql = 'DELETE FROM `data` WHERE `task_id`=? AND `random_seed`=? AND `key`=? LIMIT 1'
-            var values = [args.task.id, args.task.random_seed, args.key]
-            db.query(sql, values, () => {
-                callback(false, {})
-            })
+            data.delete(args.task, args.key, callback)
         },
 
 
         empty: function(args, callback) {
-            var sql = 'DELETE FROM `data` WHERE `task_id`=?'
-            var values = [args.task.id]
-            db.query(sql, values, () => {
-                callback(false, {})
-            })
+            data.empty(args.task, callback)
         }
     }
 }

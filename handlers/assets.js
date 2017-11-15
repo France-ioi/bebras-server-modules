@@ -59,9 +59,7 @@ module.exports = {
                                 `path` = ?'
                             var values = [args.task.id, args.task.random_seed, args.key, path, path]
                             db.query(sql, values, () => {
-                                callback(false, {
-                                    data: storage.url(path)
-                                })
+                                callback(false, storage.url(path))
                             })
                         })
                     })
@@ -73,9 +71,7 @@ module.exports = {
         url: function(args, callback) {
             get(args, (row) => {
                 if(row) {
-                    callback(false, {
-                        data: row ? storage.url(row.path) : null
-                    })
+                    callback(false, row ? storage.url(row.path) : null)
                 } else {
                     callback(new Error('Data not found'))
                 }
@@ -90,11 +86,11 @@ module.exports = {
                         var sql = 'DELETE FROM `assets` WHERE `task_id`=? AND `random_seed`=? AND `key`=? LIMIT 1'
                         var values = [args.task.id, args.task.random_seed, args.key]
                         db.query(sql, values, () => {
-                            callback(false, {})
+                            callback()
                         })
                     })
                 } else {
-                    callback(false, {});
+                    callback()
                 }
             })
         },
@@ -108,7 +104,7 @@ module.exports = {
                 var sql = 'DELETE FROM `assets` WHERE `task_id`=?'
                 var values = [args.task.id]
                 db.query(sql, values, () => {
-                    callback(false, {})
+                    callback()
                 })
             })
         }
