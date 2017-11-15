@@ -13,29 +13,6 @@ function requireUncached(module){
 */
 
 
-function callTask(method, args, callback) {
-    var file = path.resolve(process.cwd(), config.path + '/' + args.task.id + '.js')
-    fs.access(file, (fs.constants || fs).R_OK, (error) => {
-        if(error) {
-            return callback(new Error('Task not found'))
-        }
-        var task = require(file)
-        if(method in task) {
-            try {
-                var data = task[method](args)
-                if(method == 'gradeAnswer') {
-                    data.token = jwt.sign(data, config.answer_key)
-                }
-                return callback(false, { data })
-            } catch(error) {
-                return callback(error)
-            }
-        }
-        return callback(new Error('Task does not support ${method} method'))
-    })
-
-}
-
 
 function loadTask(task_id, method, callback) {
     var file = path.resolve(process.cwd(), config.path + '/' + task_id + '.js')
