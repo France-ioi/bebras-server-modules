@@ -13,9 +13,24 @@ function requireUncached(module){
 */
 
 
+//TODO: move to repositories
+var file = path.resolve(process.cwd(), 'tasks.json')
+var data = fs.existsSync(file) ? require(file) : {}
+
+
+function getFile(task_id) {
+    if(!(task_id in data)) {
+        return null;
+    }
+    return path.resolve(process.cwd(), data[task_id])
+}
+
 
 function loadTask(task_id, method, callback) {
-    var file = path.resolve(process.cwd(), config.path + '/' + task_id + '.js')
+    var file = getFile(task_id)
+    if(!file) {
+        return callback(new Error('Task not found'))
+    }
 
     function obj() {
         var obj = require(file)
@@ -32,7 +47,7 @@ function loadTask(task_id, method, callback) {
 
     fs.access(file, (fs.constants || fs).R_OK, (error) => {
         if(error) {
-            return callback(new Error('Task not found'))
+            return callback(new Error('Task file not found'))
         }
         obj()
     })
