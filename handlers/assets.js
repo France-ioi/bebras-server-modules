@@ -17,6 +17,8 @@ module.exports = {
 
     path: '/assets',
 
+    static: storage.relativePath ? storage.relativePath() : null,
+
     validators: {
         key: function(v) {
             return v && v.length && v.length < 255 ? v : new Error('Invalid key format')
@@ -108,5 +110,9 @@ module.exports = {
                 })
             })
         }
+    },
+
+    custom: function(app) {
+
     }
 }

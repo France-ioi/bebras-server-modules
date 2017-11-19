@@ -4,10 +4,11 @@ var express = require('express')
 var handler = require('./libs/handler')
 var body_parser = require('body-parser')
 var cors = require('./middleware/cors')
+var conf = require('./config/server')
 
 var app = express()
-app.use(body_parser.urlencoded({ extended: true }))
-app.use(body_parser.json())
+app.use(body_parser.urlencoded({ extended: true, limit: conf.request_max_size }))
+app.use(body_parser.json({limit: conf.request_max_size}))
 app.use(cors)
 handler(app, params._[0])
 

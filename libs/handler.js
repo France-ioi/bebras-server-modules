@@ -1,3 +1,4 @@
+var express = require('express')
 var fs = require('fs')
 var path = require('path')
 var _ = require('lodash')
@@ -123,4 +124,7 @@ module.exports = function(app, name) {
             })
         })
     })
+    if(handler.static) {
+        app.use('/' + handler.static, express.static(handler.static))
+    }
 }

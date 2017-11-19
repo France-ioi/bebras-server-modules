@@ -1,33 +1,37 @@
 var conf = require('../config/storage')
 var fs = require('fs-extra')
-
+var path = require('path')
 
 module.exports = {
 
-    localPath: function(path) {
-        return process.cwd() + '/' + conf.local.path + '/' + path
+    relativePath: function() {
+        return conf.local.path
+    },
+
+    absolutePath: function(file) {
+        return path.resolve(process.cwd(), conf.local.path + '/' + file)
     },
 
 
-    url: function(path) {
-        return conf.url + '/' + path
+    url: function(file) {
+        return conf.url + '/' + file
     },
 
 
-    write: function(path, content, callback) {
-        var local_path = this.localPath(path)
-        fs.ensureDir(require('path').dirname(local_path), (error) => {
+    write: function(file, content, callback) {
+        var absolute_path = this.absolutePath(file)
+        fs.ensureDir(path.dirname(absolute_path), (error) => {
             if(error) {
                 return callback(error)
             }
-            fs.writeFile(local_path, content, callback)
+            fs.writeFile(absolute_path, content, callback)
         })
     },
 
 
-    remove: function(path, callback) {
+    remove: function(file, callback) {
         if(path) {
-            return fs.remove(this.localPath(path), callback)
+            return fs.remove(this.absolutePath(file), callback)
         }
         callback()
     }

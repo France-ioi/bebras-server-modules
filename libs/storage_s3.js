@@ -12,23 +12,23 @@ var s3 = new AWS.S3({
 
 module.exports = {
 
-    url: function(path) {
-        return conf.url + '/' + path
+    url: function(file) {
+        return conf.url + '/' + file
     },
 
 
-    write: function(path, content, callback) {
+    write: function(file, content, callback) {
         params = {
-            Key: path,
+            Key: file,
             Body: content
         }
         s3.putObject(params, callback);
     },
 
 
-    remove: function(path, callback) {
+    remove: function(file, callback) {
         params = {
-            Key: path
+            Key: file
         }
         s3.deleteObject(params, callback)
     }
