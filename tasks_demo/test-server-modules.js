@@ -11,14 +11,16 @@ module.exports = {
         })
     },
 
-    taskHintData: (args, callback) => {
+    taskHintData: (args, task_data, callback) => {
         callback(false, {
+            task_data,
             hints_requested: args.task.hints_requested
         })
     },
 
-    gradeAnswer: (args, callback) => {
+    gradeAnswer: (args, task_data, callback) => {
         callback(false, {
+            task_data,
             score: args.answer_token,
             message: 'Your answer was ' + args.answer_token
         })

@@ -11,7 +11,7 @@ function requireUncached(module){
     return require(module)
 }
 */
-
+var TASK_DATA_KEY = '___TASK_DATA'
 
 //TODO: move to repositories
 var file = path.resolve(process.cwd(), 'tasks.json')
@@ -55,6 +55,22 @@ function loadTask(task_id, method, callback) {
 
 
 
+function loadTaskData(obj, args, callback) {
+    if(!obj.config || !obj.config.cache_task_data) {
+        callback(null, obj.taskData(args, callback))
+    }
+    data_repo.read(args.task, TASK_DATA_KEY, (error, data) => {
+        if(!error) return callback(null, data)
+        obj.taskData(args, (error, data) => {
+            if(error) return callback(error)
+            data_repo.write(args.task, TASK_DATA_KEY, data, 0, (error) => {
+                callback(error, data)
+            })
+        })
+    })
+}
+
+
 module.exports = {
 
     path: '/tasks',
@@ -94,25 +110,8 @@ module.exports = {
 
         taskData: function(args, callback) {
             loadTask(args.task.id, 'taskData', (error, obj) => {
-                if(error) {
-                    return callback(error)
-                }
-                if(!obj.config.cache_task_data) {
-                    return obj.taskData(args, callback)
-                }
-                data_repo.read(args.task, '___TASK_DATA', (error, data) => {
-                    if(!error) {
-                        return callback(false, data)
-                    }
-                    obj.taskData(args, (error, data) => {
-                        if(error) {
-                            callback(error)
-                        }
-                        data_repo.write(args.task, '___TASK_DATA', data, 0, (error) => {
-                            callback(error, data)
-                        })
-                    })
-                })
+                if(error) return callback(error)
+                loadTaskData(obj, args, callback)
             })
         },
 
@@ -120,7 +119,10 @@ module.exports = {
         taskHintData: function(args, callback) {
             loadTask(args.task.id, 'taskHintData', (error, obj) => {
                 if(error) return callback(error)
-                obj.taskHintData(args, callback)
+                loadTaskData(obj, args, (error, task_data) => {
+                    if(error) return callback(error)
+                    obj.taskHintData(args, task_data, callback)
+                })
             })
         },
 
@@ -128,10 +130,13 @@ module.exports = {
         gradeAnswer: function(args, callback) {
             loadTask(args.task.id, 'gradeAnswer', (error, obj) => {
                 if(error) return callback(error)
-                obj.gradeAnswer(args, (error, data) => {
+                loadTaskData(obj, args, (error, task_data) => {
                     if(error) return callback(error)
-                    data.token = jwt.sign(data, config.answer_key)
-                    callback(false, data)
+                    obj.gradeAnswer(args, task_data, (error, data) => {
+                        if(error) return callback(error)
+                        data.token = jwt.sign(data, config.answer_key)
+                        callback(false, data)
+                    })
                 })
             })
         }
