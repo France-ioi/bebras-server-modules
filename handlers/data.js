@@ -1,29 +1,40 @@
 var data = require('../repositories/data')
+var tokens_api = require('../libs/tokens_api')
 
 module.exports = {
 
     path: '/data',
 
     validators: {
-        key: function(v) {
-            return v && v.length && v.length < 255 ? v : new Error('Invalid key format')
+        key: function(v, callback) {
+            var valid = v.length && v.length < 255
+            callback(!valid, v)
         },
 
-        value: function(v) {
-            return v && v.length ? v : new Error('Invalid value format')
+        value: function(v, callback) {
+            var valid = v.length
+            callback(!valid, v)
         },
 
-        duration: function(v) {
-            return v == parseInt(v, 10) && v >= 0 ? v : new Error('Invalid duration format')
+        duration: function(v, callback) {
+            var valid = v == parseInt(v, 10) && v >= 0
+            callback(!valid, v)
+        },
+
+        task: function(v, callback) {
+            tokens_api.verify(v, (error) => {
+                if(error) return callback(error)
+                tokens_api.decodeTask(v, callback)
+            })
         }
     },
 
 
     params: {
-        read: ['key'],
-        write: ['key','value','duration'],
-        delete: ['key'],
-        empty: []
+        read: ['task', 'key'],
+        write: ['task', 'key','value','duration'],
+        delete: ['task', 'key'],
+        empty: ['task']
     },
 
 

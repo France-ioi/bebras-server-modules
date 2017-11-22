@@ -6,6 +6,12 @@ Installation:
 2. create .env file using .env.example as template
 3. >npm install
 
+
+Configuration (.env):
+DEV_MODE
+    set true for dev purpose only, task tokens verification skipped
+
+
 Maintenance:
 
 Add task

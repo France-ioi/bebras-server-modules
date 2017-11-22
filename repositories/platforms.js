@@ -1,18 +1,18 @@
 var db = require('../libs/db')
 
-var cache = null
+var name_cache = null
 
 function precache(callback) {
-    if(cache === null) {
+    if(name_cache === null) {
         var sql = 'SELECT * FROM platforms'
         db.query(sql, (error, rows) => {
             if(error) {
                 console.error('Can\'t read platforms table')
                 process.exit()
             }
-            cache = {}
+            name_cache = {}
             rows.map((row) => {
-                cache[row.id] = row
+                name_cache[row.name] = row
             })
             callback()
         })
@@ -24,10 +24,10 @@ function precache(callback) {
 
 module.exports = {
 
-    get: function(id, callback) {
+    getByName: function(name, callback) {
         precache(() => {
-            if(id in cache) {
-                return callback(false, cache[id])
+            if(name in name_cache) {
+                return callback(false, name_cache[name])
             }
             callback(new Error('Platform not found'))
         })

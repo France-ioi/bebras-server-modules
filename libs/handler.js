@@ -2,8 +2,10 @@ var express = require('express')
 var fs = require('fs')
 var path = require('path')
 var _ = require('lodash')
+var async = require('async')
 var jwt = require('jsonwebtoken')
-var platforms = require('../repositories/platform')
+var platforms = require('../repositories/platforms')
+
 
 
 function load(name) {
@@ -32,27 +34,36 @@ function resultError(error) {
 }
 
 
-function actionParams(body, handler, platform, callback) {
+function actionParams(body, handler, callback) {
     var params = handler.params[body.action] || []
     var validators = handler.validators || {}
     var res = {}
-    for(var i=0; i<params.length; i++) {
-        var p = params[i];
-        if(!(p in body)) {
-            return callback(new Error('Missed param: ' + p))
-        }
-        if(validators[p]) {
-            var value = validators[p](body[p], platform)
-            if(value instanceof Error) {
-                return callback(value)
+
+    async.each(
+        params,
+        (p, callback) => {
+            if(!(p in body)) {
+                return callback(new Error('Missed param: ' + p))
             }
-            res[p] = value
-        } else {
-            res[p] = body[p]
+            if(validators[p]) {
+                validators[p](body[p], (error, value) => {
+                    if(error) {
+                        return callback(error instanceof Error ? error : new Error(`Invalid parameter: ${p}`))
+                    }
+                    res[p] = value
+                    callback()
+                })
+            } else {
+                res[p] = body[p]
+                callback()
+            }
+        },
+        (error) => {
+            callback(error, res)
         }
-    }
-    callback(false, res)
+    )
 }
+
 
 
 function validateTask(task, callback) {
@@ -70,7 +81,7 @@ function validateTask(task, callback) {
 
 function verifyBody(body, handler, callback) {
     var args = {}
-
+/*
     platforms.get(body.platform_id, (error, platform) => {
         if(error) {
             return callback(error)
@@ -89,23 +100,25 @@ function verifyBody(body, handler, callback) {
                 }
 
                 args.task = task
-
+*/
                 if(!handler.actions[body.action]) {
                     return callback(new Error('Invalid action'))
                 }
 
-                actionParams(body, handler, platform, (error, params) => {
+                actionParams(body, handler, (error, params) => {
                     if(error) {
                         return callback(error)
                     }
                     args = _.extend(args, params)
                     callback(false, body.action, args)
                 })
-
+/*
             })
 
         })
+
     })
+*/
 }
 
 

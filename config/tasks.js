@@ -1,5 +1,5 @@
 module.exports = {
 
-    answer_key: process.env.TASKS_ANSWER_KEY
+    grader_key: process.env.TASKS_GRADER_KEY
 
 }

@@ -1,6 +1,7 @@
 module.exports = {
 
     default: process.env.STORAGE || 'local',
+
     url: process.env.STORAGE_URL,
 
     local: {

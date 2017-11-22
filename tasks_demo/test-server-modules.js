@@ -21,8 +21,8 @@ module.exports = {
     gradeAnswer: (args, task_data, callback) => {
         callback(false, {
             task_data,
-            score: args.answer_token,
-            message: 'Your answer was ' + args.answer_token
+            score: args.answer.value,
+            message: 'Your answer was ' + args.answer.value
         })
     }
 }

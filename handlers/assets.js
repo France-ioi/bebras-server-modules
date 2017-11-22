@@ -2,6 +2,7 @@ var db = require('../libs/db')
 var uuid = require('uuid')
 var storage = require('../libs/storage')
 var base64parser = require('../libs/base64parser')
+var tokens_api = require('../libs/tokens_api')
 
 
 function get(args, callback) {
@@ -20,21 +21,30 @@ module.exports = {
     static: storage.relativePath ? storage.relativePath() : null,
 
     validators: {
-        key: function(v) {
-            return v && v.length && v.length < 255 ? v : new Error('Invalid key format')
+        key: function(v, callback) {
+            var valid = v && v.length && v.length < 255
+            callback(!valid, v)
         },
 
-        data: function(v) {
-            return v && v.length ? v : new Error('Invalid data format')
+        data: function(v, callback) {
+            var valid = v && v.length
+            callback(!valid, v)
+        },
+
+        task: function(v, callback) {
+            tokens_api.verify(v, (error) => {
+                if(error) return callback(error)
+                tokens_api.decodeTask(v, callback)
+            })
         }
     },
 
 
     params: {
-        add: ['key', 'data'],
-        url: ['key'],
-        delete: ['key'],
-        empty: []
+        add: ['task', 'key', 'data'],
+        url: ['task', 'key'],
+        delete: ['task', 'key'],
+        empty: ['task']
     },
 
 

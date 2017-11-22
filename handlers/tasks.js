@@ -3,6 +3,7 @@ var path = require('path')
 var fs = require('fs')
 var config = require('../config/tasks')
 var data_repo = require('../repositories/data')
+var tokens_api = require('../libs/tokens_api')
 
 //TODO: watch tasks dir and reset modules cache?
 /*
@@ -76,33 +77,42 @@ module.exports = {
     path: '/tasks',
 
     validators: {
-        answer_token: function(v, platform) {
-            try {
-                var answer = jwt.verify(v, platform.public_key)
-            } catch(error) {
-                return new Error('Invalid answer_token')
-            }
-            return answer
+
+        task: function(v, callback) {
+            tokens_api.verify(v, (error) => {
+                if(error) return callback(error)
+                tokens_api.decodeTask(v, callback)
+            })
         },
 
-        min_score: function(v) {
-            return v == parseInt(v, 10) ? v : new Error('Invalid min_score format')
+        answer: function(v, callback) {
+            tokens_api.verify(v, (error) => {
+                if(error) return callback(error)
+                tokens_api.decodeAnswer(v, callback)
+            })
         },
 
-        max_score: function(v) {
-            return v == parseInt(v, 10) ? v : new Error('Invalid max_score format')
+        min_score: function(v, callback) {
+            var valid = parseInt(v, 10)
+            callback(!valid, v)
         },
 
-        no_score: function(v) {
-            return v == parseInt(v, 10) ? v : new Error('Invalid no_score format')
+        max_score: function(v, callback) {
+            var valid = parseInt(v, 10)
+            callback(!valid, v)
+        },
+
+        no_score: function(v, callback) {
+            var valid = parseInt(v, 10)
+            callback(valid, v)
         }
     },
 
 
     params: {
-        taskData: [],
-        taskHintData: [],
-        gradeAnswer: ['answer_token', 'min_score', 'max_score', 'no_score'],
+        taskData: ['task'],
+        taskHintData: ['task'],
+        gradeAnswer: ['task', 'answer', 'min_score', 'max_score', 'no_score'],
     },
 
 
@@ -134,7 +144,7 @@ module.exports = {
                     if(error) return callback(error)
                     obj.gradeAnswer(args, task_data, (error, data) => {
                         if(error) return callback(error)
-                        data.token = jwt.sign(data, config.answer_key)
+                        data.token = jwt.sign(data, config.grader_key)
                         callback(false, data)
                     })
                 })
