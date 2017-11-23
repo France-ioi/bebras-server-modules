@@ -71,6 +71,14 @@ function loadTaskData(obj, args, callback) {
     })
 }
 
+function today() {
+    var now = new Date
+    var d = now.getDate()
+    var m = now.getMonth() + 1
+    // Algorea TokenParser format: d-m-Y
+    return (d < 10 ? '0' + d : d) + '-' + (m < 10 ? '0' + m : m) + '-' + now.getFullYear()
+}
+
 
 module.exports = {
 
@@ -93,18 +101,18 @@ module.exports = {
         },
 
         min_score: function(v, callback) {
-            var valid = parseInt(v, 10)
+            var valid = v == parseInt(v, 10) && v >= 0
             callback(!valid, v)
         },
 
         max_score: function(v, callback) {
-            var valid = parseInt(v, 10)
+            var valid = v == parseInt(v, 10) && v >= 0
             callback(!valid, v)
         },
 
         no_score: function(v, callback) {
-            var valid = parseInt(v, 10)
-            callback(valid, v)
+            var valid = v == parseInt(v, 10) && v >= 0
+            callback(!valid, v)
         }
     },
 
@@ -144,7 +152,9 @@ module.exports = {
                     if(error) return callback(error)
                     obj.gradeAnswer(args, task_data, (error, data) => {
                         if(error) return callback(error)
-                        data.token = jwt.sign(data, config.grader_key)
+                        data.idUserAnswer = args.answer.idUserAnswer
+                        data.date = today()
+                        data.token = jwt.sign(data, config.grader_key, {algorithm: 'RS512'})
                         callback(false, data)
                     })
                 })

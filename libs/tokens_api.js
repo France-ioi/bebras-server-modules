@@ -23,15 +23,16 @@ module.exports = {
         }
         callback(null, {
             id,
-            random_seed
+            random_seed,
+            hints_requested: payload.hintsRequested
         })
     },
 
 
     decodeAnswer: function(token, callback) {
         var payload = jwt.decode(token)
-        var id = parseTaskId(payload.itemUrl)
-        if(!id) {
+        var task_id = parseTaskId(payload.itemUrl)
+        if(!task_id) {
             return callback(new Error('Answer token error: taskID missed in itemUrl'))
         }
         var random_seed = parseInt(payload.randomSeed, 10)
@@ -39,8 +40,9 @@ module.exports = {
             return callback(new Error('Answer token error: randomSeed missed or incorrect'))
         }
         callback(null, {
+            idUserAnswer: payload.idUserAnswer,
             value: payload.sAnswer,
-            id,
+            task_id,
             random_seed
         })
     },
