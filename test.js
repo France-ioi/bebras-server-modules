@@ -10,7 +10,7 @@ console.log(data)
 var task = {
     platformName: 'test',
     randomSeed: '0',
-    itemUrl: 'http://localhost/?taskID=123'
+    itemUrl: 'http://localhost/?taskID=2017-fr-al-01-reused-key'
 }
 var token = jwt.sign(task, 'buddy')
 console.log(token)

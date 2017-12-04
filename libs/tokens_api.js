@@ -24,7 +24,7 @@ module.exports = {
         callback(null, {
             id,
             random_seed,
-            hints_requested: payload.hintsRequested
+            hints_requested: payload.sHintsRequested
         })
     },
 
