@@ -58,7 +58,7 @@ function loadTask(task_id, method, callback) {
 
 function loadTaskData(obj, args, callback) {
     if(!obj.config || !obj.config.cache_task_data) {
-        callback(null, obj.taskData(args, callback))
+        return obj.taskData(args, callback)
     }
     data_repo.read(args.task, TASK_DATA_KEY, (error, data) => {
         if(!error) return callback(null, data)
