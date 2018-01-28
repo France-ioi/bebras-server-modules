@@ -21,7 +21,7 @@
   },
   "devDependencies": {},
   "scripts": {
-    "install": "nodejs migrate.js up",
+    "migrate": "node migrate.js up",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
