@@ -33,7 +33,8 @@ module.exports = {
             id: task_id, /* obsolete, kept for compatibility */
             random_seed,
             hints_requested: payload.sHintsRequested,
-            params
+            params,
+            payload
             /* Is there a good reason not to pass the full token? */
         })
     },
@@ -55,7 +56,8 @@ module.exports = {
             value: payload.sAnswer,
             task_id,
             random_seed,
-            params
+            params,
+            payload
         })
     },
 
