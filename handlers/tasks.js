@@ -150,13 +150,19 @@ module.exports = {
                 if(error) return callback(error)
                 loadTaskData(obj, args, (error, task_data) => {
                     if(error) return callback(error)
-                    obj.gradeAnswer(args, task_data, (error, data) => {
-                        if(error) return callback(error)
-                        data.idUserAnswer = args.answer.idUserAnswer
-                        data.date = today()
-                        data.token = jwt.sign(data, config.grader_key, {algorithm: 'RS512'})
-                        callback(false, data)
-                    })
+                    try {
+                        obj.gradeAnswer(args, task_data, (error, data) => {
+                            if(error) return callback(error);
+                            for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer']) {
+                                data[key] = args.answer.payload[key];
+                            }
+                            data.date = today()
+                            data.token = jwt.sign(data, config.grader_key, {algorithm: 'RS512'})
+                            callback(false, data)
+                        })
+                    } catch (ex) {
+                        return callback(ex);
+                    }
                 })
             })
         }
