@@ -71,12 +71,11 @@ function loadTaskData(obj, args, callback) {
     })
 }
 
-function today() {
-    var now = new Date
-    var d = now.getDate()
-    var m = now.getMonth() + 1
+function algoreaFormatDate(date) {
+    var d = date.getDate()
+    var m = date.getMonth() + 1
     // Algorea TokenParser format: d-m-Y
-    return (d < 10 ? '0' + d : d) + '-' + (m < 10 ? '0' + m : m) + '-' + now.getFullYear()
+    return (d < 10 ? '0' + d : d) + '-' + (m < 10 ? '0' + m : m) + '-' + date.getFullYear()
 }
 
 
@@ -156,7 +155,7 @@ module.exports = {
                             for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer']) {
                                 data[key] = args.answer.payload[key];
                             }
-                            data.date = today()
+                            data.date = algoreaFormatDate(new Date)
                             data.token = jwt.sign(data, config.grader_key, {algorithm: 'RS512'})
                             callback(false, data)
                         })
