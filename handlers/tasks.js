@@ -112,7 +112,12 @@ module.exports = {
         no_score: function(v, callback) {
             var valid = v == parseInt(v, 10) && v >= 0
             callback(!valid, v)
-        }
+        },
+
+        request: function(v, callback) {
+            callback(null, v);
+        },
+
     },
 
 
@@ -120,6 +125,7 @@ module.exports = {
         taskData: ['task'],
         taskHintData: ['task'],
         gradeAnswer: ['task', 'answer', 'min_score', 'max_score', 'no_score'],
+        requestHint: ['task', 'request'],
     },
 
 
@@ -138,7 +144,11 @@ module.exports = {
                 if(error) return callback(error)
                 loadTaskData(obj, args, (error, task_data) => {
                     if(error) return callback(error)
-                    obj.taskHintData(args, task_data, callback)
+                    try {
+                        obj.taskHintData(args, task_data, callback)
+                    } catch (ex) {
+                        return callback(ex);
+                    }
                 })
             })
         },
@@ -164,7 +174,20 @@ module.exports = {
                     }
                 })
             })
-        }
+        },
+
+        requestHint: function(args, callback) {
+            loadTask(args.task.id, 'taskData', (error, obj) => {
+                if(error) return callback(error)
+                /* Task's requestHint is expected to return the askedHint*/
+                obj.requestHint(args, (error, askedHint) => {
+                    if(error) return callback(error);
+                    const payload = {askedHint: askedHint, date: algoreaFormatDate(new Date)};
+                    const hintToken = jwt.sign(payload, config.grader_key, {algorithm: 'RS512'});
+                    callback(null, {hintToken: hintToken});
+                });
+            })
+       },
 
     }
 }
