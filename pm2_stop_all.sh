@@ -1,3 +1,4 @@
+#!/bin/sh
 pm2 stop bsm-data
 pm2 delete bsm-data
 pm2 stop bsm-tasks
