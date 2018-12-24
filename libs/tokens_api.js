@@ -14,7 +14,12 @@ function getTaskID(params) {
 module.exports = {
 
     decodeTask: function(token, callback) {
-        var payload = jwt.decode(token)
+        if(typeof token == 'object' && config.server.dev_mode) {
+            // Devel option : we send an object instead of a token
+            var payload = token;
+        } else {
+            var payload = jwt.decode(token)
+        }
         if(!payload) {
             return callback(new Error('Task token error: unparseable token'))
         }
@@ -41,7 +46,12 @@ module.exports = {
 
 
     decodeAnswer: function(token, callback) {
-        var payload = jwt.decode(token)
+        if(typeof token == 'object' && config.server.dev_mode) {
+            // Devel option : we send an object instead of a token
+            var payload = token;
+        } else {
+            var payload = jwt.decode(token)
+        }
         var params = getTaskParams(payload.itemUrl)
         var task_id = getTaskID(params)
         if(!task_id) {

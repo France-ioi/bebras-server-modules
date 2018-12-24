@@ -22,7 +22,7 @@ The tasks server will be accessible at http://localhost:3101/.
 
 Base configuration is done in the `.env` file ; use `.env.example` as template.
 
-* `DEV_MODE` : set `true` for dev purpose only, task tokens verification skipped
+* `DEV_MODE` : set `true` for dev purposes only. It will skip the verification of tokens, and allow to send an object as `task` argument instead of a token.
 
 ## Commands
 
