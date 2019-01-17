@@ -16,9 +16,7 @@ Start the servers :
 ./pm2_start_all.sh
 ```
 
-The tasks server will be accessible at http://localhost:3101/, to be used by your tasks.
-
-If you open this URL in the browser and it tells you `Cannot GET /`, the setup was very probably successful (the server doesn't accept GET requests, hence you get an error message).
+If you kept the default port, the endpoint you will need to make your client tasks point at will be `http://your.server:3101/` ; note that bebras-server-modules doesn't offer any user interface.
 
 ## Configuration
 
