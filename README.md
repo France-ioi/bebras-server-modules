@@ -1,5 +1,8 @@
 # bebras-server-modules
-Server-side modules to be used by bebras tasks
+
+Server-side modules to be used by bebras tasks.
+
+Some bebras tasks, for instance [alkindi-task-enigma](https://github.com/France-ioi/alkindi-task-enigma) have both a client side and a server side ; the server side will generate data for the instance of the task, and send to the client side some of that data, hints and grade the answers, without revealing the full data to the user. bebras-server-modules is the intermediate between the client and the server for these tasks ; it handles communication, authentication, data storage and other features for these tasks.
 
 ## Installation
 
@@ -11,7 +14,13 @@ Server-side modules to be used by bebras tasks
 
 ## Usage
 
-Start the servers :
+You must first add task modules to bebras-server-modules (for instance, the `server-modules` from [alkindi-task-enigma](https://github.com/France-ioi/alkindi-task-enigma). You can do so with :
+```
+node command.js tasks:add TASK_ID TASK_PATH
+```
+with `TASK_ID` being an unique identifier for the task, and `TASK_PATH` the absolute path to the js file of the module.
+
+You can then start the servers :
 ```
 ./pm2_start_all.sh
 ```
@@ -30,6 +39,15 @@ Base configuration is done in the `.env` file ; use `.env.example` as template.
 * `STORAGE_URL` : URL to access assets stored
 * `TOKENS_SERVICE_URL` : URL to access the tokens service of bebras-server-modules
 * `TASKS_GRADER_KEY_FILE` : private key to sign tokens, the default demo one can be used for development purposes
+
+## Development
+
+During development, you can use the following command to restart automatically the tasks endpoint of bebras-server-modules each time a file in the task module `tasks/enigma/` is modified :
+```
+npx pm2 start --no-daemon --watch tasks/enigma/ server.js --name bsm-tasks --interpreter babel-node -- tasks -p=3101
+```
+
+Adapt the watched path to the task you're working on.
 
 ## Commands
 
