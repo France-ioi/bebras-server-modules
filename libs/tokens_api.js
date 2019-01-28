@@ -66,6 +66,7 @@ module.exports = {
             value: payload.sAnswer,
             task_id,
             random_seed,
+            hints_requested: payload.sHintsRequested,
             params,
             payload
         })
