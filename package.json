@@ -18,6 +18,7 @@
     "mysql-migrations": "^1.0.4",
     "node-env-file": "^0.1.8",
     "range": "0.0.3",
+    "safe-eval": "^0.4.1",
     "seedrandom": "^2.4.3",
     "shuffle": "^0.2.2",
     "uuid": "^3.1.0"

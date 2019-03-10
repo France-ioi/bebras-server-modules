@@ -14,6 +14,8 @@ module.exports = {
             if(error) {
                 throw error
             }
+            //var fsql = connection.format(sql, values);
+            //console.log(fsql)
             connection.query(sql, values, (error, results, fields) => {
                 connection.release();
                 if(error) {
