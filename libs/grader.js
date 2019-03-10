@@ -33,7 +33,6 @@ function grade(grader_data, answer) {
         res.score += valid ? 1 : 0;
     }
     res.score = res.score / grader_data.length;
-    console.log(res)
     return res;
 }
 
