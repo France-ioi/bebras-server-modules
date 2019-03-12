@@ -1,7 +1,6 @@
 var safeEval = require('safe-eval')
 
 function testMultiple(valid, answer) {
-    if(valid.length !== answer.length) return answer;
     var s1 = valid.sort(), s2 = answer.sort(), mistakes = [];
     var res = s1.every(function(v, i) {
         if(v == s2[i]) {
@@ -13,7 +12,7 @@ function testMultiple(valid, answer) {
     return res === true ? res : mistakes;
 }
 
-function grade(grader_data, answer) {
+exports.grade = function(grader_data, answer) {
     var res = {
         score: 0,
         mistakes: []
@@ -25,7 +24,7 @@ function grade(grader_data, answer) {
         } else if(Array.isArray(grader_data[i])) {
             var test = testMultiple(grader_data[i], answer[i]);
             valid = test === true;
-            res.mistakes.push(valid ? null : test);
+            res.mistakes.push(valid ? [] : test);
         } else {
             valid = grader_data[i] == answer[i] ? 1 : 0;
             res.mistakes.push(valid ? null : answer[i]);
