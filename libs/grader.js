@@ -12,7 +12,7 @@ function testMultiple(valid, answer) {
     return res === true ? res : mistakes;
 }
 
-exports.grade = function(grader_data, answer) {
+function grade(grader_data, answer) {
     var res = {
         score: 0,
         mistakes: []
