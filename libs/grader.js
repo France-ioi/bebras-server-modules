@@ -17,21 +17,28 @@ function grade(grader_data, answer) {
         score: 0,
         mistakes: []
     }
-    for(var i=0; i<grader_data.length; i++) {
-        if(typeof grader_data[i] === 'function') {
-            valid = !!grader_data[i](answer[i]);
-            res.mistakes.push(valid ? null : answer[i]);
-        } else if(Array.isArray(grader_data[i])) {
-            var test = testMultiple(grader_data[i], answer[i]);
-            valid = test === true;
-            res.mistakes.push(valid ? [] : test);
-        } else {
-            valid = grader_data[i] == answer[i] ? 1 : 0;
-            res.mistakes.push(valid ? null : answer[i]);
+    try {
+        for(var i=0; i<grader_data.length; i++) {
+            if(typeof grader_data[i] === 'function') {
+                valid = !!grader_data[i](answer[i]);
+                res.mistakes.push(valid ? null : answer[i]);
+            } else if(Array.isArray(grader_data[i])) {
+                var test = testMultiple(grader_data[i], answer[i]);
+                valid = test === true;
+                res.mistakes.push(valid ? [] : test);
+            } else {
+                valid = grader_data[i] == answer[i] ? 1 : 0;
+                res.mistakes.push(valid ? null : answer[i]);
+            }
+            res.score += valid ? 1 : 0;
         }
-        res.score += valid ? 1 : 0;
+        res.score = res.score / grader_data.length;
+    } catch(e) {
+        res = {
+            score: 0,
+            mistakes: []
+        }
     }
-    res.score = res.score / grader_data.length;
     return res;
 }
 
