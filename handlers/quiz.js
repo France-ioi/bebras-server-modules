@@ -5,7 +5,7 @@ var safeEval = require('safe-eval')
 
 module.exports = {
 
-    path: '/quizze',
+    path: '/quiz',
 
     validators: {
 
