@@ -15,12 +15,22 @@ function testMultiple(valid, answer) {
 function grade(grader_data, answer) {
     var res = {
         score: 0,
-        mistakes: []
+        mistakes: [],
+        messages: []
     }
     try {
+        var valid;
         for(var i=0; i<grader_data.length; i++) {
             if(typeof grader_data[i] === 'function') {
-                valid = !!grader_data[i](answer[i]);
+                var fres = grader_data[i](answer[i]);
+                if(typeof fres === 'object') {
+                    valid = 'valid' in fres && fres.valid;
+                    if('message' in fres && fres.message) {
+                        res.messages.push(fres.message);
+                    }
+                } else {
+                    valid = !!fres;
+                }
                 res.mistakes.push(valid ? null : answer[i]);
             } else if(Array.isArray(grader_data[i])) {
                 var test = testMultiple(grader_data[i], answer[i]);
@@ -36,7 +46,8 @@ function grade(grader_data, answer) {
     } catch(e) {
         res = {
             score: 0,
-            mistakes: []
+            mistakes: [],
+            messages: []
         }
     }
     return res;
