@@ -69,7 +69,7 @@ module.exports = {
                 if(error) return callback(error)
                 callback(
                     false,
-                    grader.gradeAnswer(data, args.answer, callback)
+                    grader.gradeAnswer(data, args.answer, args.versions, callback)
                 );
             })
         }
