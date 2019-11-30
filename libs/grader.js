@@ -95,9 +95,9 @@ function grade(grader_data, answer, versions) {
 
 module.exports = {
 
-    gradeAnswer: function(data, answer) {
+    gradeAnswer: function(data, answer, versions) {
         var grader_data = safeEval(data) // TODO: may be safeEval in repo?
-        return grade(grader_data, answer)
+        return grade(grader_data, answer, versions)
     }
 
 }
