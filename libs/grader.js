@@ -95,7 +95,7 @@ function grade(grader_data, answer, versions, score_settings) {
                 nb_valid += isValid ? 1 : 0;
                 nb_mistakes += isValid ? 0 : 1;
             } else {
-                if(!answer[i]) { continue; }
+                if(typeof answer[i] == 'undefined') { continue; }
                 isValid = grader == answer[i] ? 1 : 0;
                 res.mistakes.push(isValid ? null : answer[i]);
                 nb_valid += isValid ? 1 : 0;
