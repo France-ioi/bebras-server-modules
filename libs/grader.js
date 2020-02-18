@@ -64,8 +64,13 @@ function grade(grader_data, answer, versions) {
                     valid = test === true;
                     var mistakes = valid ? [] : test;
                     res.mistakes.push(mistakes);
-                    if(grader.messages && mistakes.length && grader.messages[mistakes[0]]) {
-                        res.messages[i] = grader.messages[mistakes[0]];
+                    if(grader.messages && mistakes.length) {
+                        res.messages[i] = [];
+                        for(var j=0; j<mistakes.length; j++) {
+                            if(grader.messages[mistakes[j]]) {
+                                res.messages[i][mistakes[j]] = grader.messages[mistakes[j]];
+                            }
+                        }
                     }
                 } else {
                     valid = grader == answer[i] ? 1 : 0;
