@@ -41,6 +41,14 @@ module.exports = {
                 return callback(true, v)
             }
             callback(false, v)
+        },
+
+        versions: function(v, callback) {
+            callback(!v, v)
+        },
+
+        score_settings: function(v, callback) {
+            callback(false, v)
         }
     },
 
@@ -48,7 +56,7 @@ module.exports = {
     params: {
         write: ['task_id', 'data'],
         delete: ['task_id'],
-        grade: ['task', 'answer']
+        grade: ['task', 'answer', 'versions', 'score_settings']
     },
 
 
@@ -69,7 +77,7 @@ module.exports = {
                 if(error) return callback(error)
                 callback(
                     false,
-                    grader.gradeAnswer(data, args.answer, args.versions, callback)
+                    grader.gradeAnswer(data, args.answer, args.versions, args.score_settings)
                 );
             })
         }
