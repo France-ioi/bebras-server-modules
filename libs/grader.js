@@ -123,7 +123,7 @@ function grade(grader_data, answer, versions, score_settings) {
             error: true
         }
     }
-    res.score = +res.score.toFixed(2);
+    res.score = Math.round(res.score);
     return res;
 }
 
