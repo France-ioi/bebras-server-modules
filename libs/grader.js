@@ -46,7 +46,7 @@ function grade(grader_data, answer, versions, score_settings) {
                 grader = grader[versions[i]];
             }
             if (typeof grader === "function") {
-                if(!answer[i]) { continue; }
+                if(typeof answer[i] == 'undefined') { continue; }
                 var fres = grader(answer[i]);
                 if (typeof fres === "object") {
                     var score =
@@ -90,7 +90,7 @@ function grade(grader_data, answer, versions, score_settings) {
                         }
                     }
                 } else {
-                    if(!answer[i]) { continue; }
+                    if(typeof answer[i] == 'undefined') { continue; }
                     isValid = grader == answer[i] ? 1 : 0;
                     res.mistakes.push(isValid ? null : answer[i]);
                     if(grader.messages && !isValid && grader.messages[answer[i]]) {
