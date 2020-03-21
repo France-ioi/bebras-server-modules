@@ -2,7 +2,7 @@ var safeEval = require('safe-eval')
 
 function isArrayAnswerEmpty(answers) {
     for(var i=0; i<answers.length; i++) {
-        if(answers[i]) { return false; }
+        if(typeof answers[i] != "undefined") { return false; }
     }
     return true;
 }
