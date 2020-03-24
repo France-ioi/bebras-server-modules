@@ -3,7 +3,6 @@ var db = require('../libs/db')
 module.exports = {
 
     read: function(task, callback) {
-        console.log(task)
         var sql = 'SELECT `data` FROM `graders` WHERE `task_id`=? LIMIT 1'
         var values = [task.id]
         db.query(sql, values, (rows) => {
