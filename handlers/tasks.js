@@ -2,7 +2,7 @@ var jwt = require('jsonwebtoken')
 var path = require('path')
 var fs = require('fs')
 var config = require('../config/tasks')
-var data_repo = require('../repositories/data')
+var data_repo = require('../repositories/task_data')
 var tokens_api = require('../libs/tokens_api')
 
 //TODO: watch tasks dir and reset modules cache?

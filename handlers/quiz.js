@@ -1,6 +1,6 @@
 var tokens_api = require('../libs/tokens_api')
-var graders = require('../repositories/graders')
-var grader = require('../libs/grader')
+var grader_data = require('../repositories/grader_data')
+var task_graders = require('../libs/task_graders')
 var safeEval = require('safe-eval')
 
 module.exports = {
@@ -56,28 +56,39 @@ module.exports = {
     params: {
         write: ['task_id', 'data'],
         delete: ['task_id'],
-        grade: ['task', 'answer', 'versions', 'score_settings']
+        grade: ['task', 'answer', 'versions', 'score_settings'],
+        grade2: ['task', 'answer', 'versions', 'score_settings']
     },
 
 
     actions: {
 
         write: function(args, callback) {
-            graders.write(args.task_id, args.data, callback)
+            grader_data.write(args.task_id, args.data, callback)
         },
 
 
         delete: function(args, callback) {
-            graders.delete(args.task_id, callback)
+            grader_data.delete(args.task_id, callback)
         },
 
 
         grade: function(args, callback) {
-            graders.read(args.task, function(error, data) {
+            grader_data.read(args.task, function(error, data) {
                 if(error) return callback(error)
                 callback(
                     false,
-                    grader.gradeAnswer(data, args.answer, args.versions, args.score_settings)
+                    task_graders.quiz.gradeAnswer(data, args.answer, args.versions, args.score_settings)
+                );
+            })
+        },
+
+        grade2: function(args, callback) {
+            grader_data.read(args.task, function(error, data) {
+                if(error) return callback(error)
+                callback(
+                    false,
+                    task_graders.quiz2.gradeAnswer(data, args.answer, args.versions, args.score_settings)
                 );
             })
         }
