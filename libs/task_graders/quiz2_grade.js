@@ -114,9 +114,12 @@ function getAnswerGrader(grader) {
                     score: 'score' in fres ? parseFloat(fres.score) || 0 : 0,
                     feedback: {
                         correct_answer: [],
-                        mistakes: answer,
+                        mistakes: [],
                         messages: []
                     }
+                }
+                if(res.score == 0) {
+                    res.feedback.mistakes = answer;
                 }
                 if('message' in fres && fres.message) {
                     res.feedback.messages = [fres.message];
@@ -130,9 +133,12 @@ function getAnswerGrader(grader) {
                     score: !!fres,
                     feedback: {
                         correct_answer: [],
-                        mistakes: answer,
+                        mistakes: [],
                         messages: []
                     }
+                }
+                if(!fres) {
+                    res.feedback.mistakes = answer;
                 }
             }
             return res;
@@ -190,6 +196,7 @@ function grade(grader_data, answer, versions, score_settings) {
         res.feedback.push(grader_result.feedback);
     });
     res.score = calculator.getScore();
+    //console.log(res)
     return res;
 };
 
