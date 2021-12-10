@@ -53,28 +53,86 @@ function graderDataEnumerator(grader_data, versions) {
 
 
 
-function getAnswerGrader(grader) {
+function getAnswerGrader(grader, score_settings, idx) {
+
+    var question_info = score_settings.questions_info[idx];
+
+
+    function getScoreCalculationMethod() {
+        var res = {
+            formula: 'default',
+            wrong_answer_penalty: 1
+        }
+        if('score_calculation' in score_settings) {
+            if('formula' in score_settings.score_calculation) {
+                res.formula = score_settings.score_calculation.formula;
+            } else if('wrong_answer_penalty' in score_settings.score_calculation) {
+                res.formula = 'wrong_answer_penalty';
+                res.wrong_answer_penalty = parseFloat(score_settings.score_calculation.wrong_answer_penalty) || 1;
+            }            
+        }
+        return res;
+    }
 
 
     function gradeAnswerArray(given_answer, correct_answer, messages) {
         var res = {
-            score: true,
+            score: 0,
             feedback: {
                 correct_answer: correct_answer,
                 mistakes: [],
                 messages: messages
             }
         }
+
+        var user_correct_answers_amount = 0;
+        var user_incorrect_answers_amount = 0;
+
         for(var i=0; i<given_answer.length; i++) {
             var correct = correct_answer.indexOf(given_answer[i]) !== -1;
-            res.score = res.score && correct;
-            if(!correct) {
+            if(correct) {
+                user_correct_answers_amount++;
+            } else {
+                user_incorrect_answers_amount++;
                 res.feedback.mistakes.push(given_answer[i]);
             }
         }
-        if(given_answer.length != correct_answer.length) {
-            res.score = false;
+        var correct_answers_amount = correct_answer.length;
+        var incorrect_answers_amount = question_info.answers_amount - correct_answers_amount;
+
+        var method = getScoreCalculationMethod();
+
+        switch(method.formula) {
+            case "wrong_answer_penalty":
+                if(correct_answers_amount > 0) {
+                    res.score = (user_correct_answers_amount - method.wrong_answer_penalty * user_incorrect_answers_amount) / correct_answers_amount;
+                }
+                break;
+            case "percentage_of_correct":
+                if(correct_answers_amount > 0 && user_incorrect_answers_amount == 0) {
+                    res.score = user_correct_answers_amount / correct_answers_amount;
+                }
+                break;
+            case "balance":
+                if(correct_answers_amount > 0) {
+                    res.score = (user_correct_answers_amount - user_incorrect_answers_amount) / correct_answers_amount;
+                }
+                break;
+            case "disbalance":
+                if(correct_answers_amount > 0) {
+                    res.score = user_correct_answers_amount / correct_answers_amount;
+                    if(incorrect_answers_amount > 0) {
+                        res.score -= user_incorrect_answers_amount / incorrect_answers_amount;
+                    }
+                }
+                break;
+            case "default":
+            default:
+                res.score = user_correct_answers_amount == correct_answers_amount && user_incorrect_answers_amount == 0 ? 1 : 0;
+                break;
         }
+        res.score = Math.max(0, res.score);
+        res.score = Math.min(1, res.score);
         return res;
     }
 
@@ -95,6 +153,31 @@ function getAnswerGrader(grader) {
         }
         if(given_answer.length != correct_answer.length) {
             res.score = false;
+        }
+        return res;
+    }
+
+    function gradeAnswerTwoDimArray(given_answer, correct_answer, messages) {
+        var res = {
+            score: true,
+            feedback: {
+                correct_answer: correct_answer,
+                mistakes: [],
+                messages: messages
+            }
+        }
+        for(var i = 0; i < given_answer.length; i++) {
+            for(var j = 0; j < given_answer[i].length; j++){
+                var correct = correct_answer[i].indexOf(given_answer[i][j]) !== -1;
+                res.score = res.score && correct;
+                if(!correct) {
+                    res.feedback.mistakes.push({ cont: i, item: j });
+                }
+            }
+            if(given_answer[i].length != correct_answer[i].length) {
+                res.score = false;
+                res.feedback.mistakes.push({ cont: i, item: null });
+            }
         }
         return res;
     }
@@ -149,6 +232,9 @@ function getAnswerGrader(grader) {
 
 
         'object': function(answer) {
+            if(grader.twoDimArray) {
+                return gradeAnswerTwoDimArray(answer, grader.value, grader.messages || []);
+            }
             if(grader.strict) {
                 return gradeAnswerArrayStrict(answer, grader.value, grader.messages || []);
             }
@@ -161,7 +247,8 @@ function getAnswerGrader(grader) {
             return {
                 score: score,
                 feedback: {
-                    mistakes: answer,
+                    correct_answer: [grader],
+                    mistakes: score ? [] : answer,
                     messages: []
                 }
             }
@@ -188,7 +275,7 @@ function grade(grader_data, answer, versions, score_settings) {
     }
     var calculator = scoreCalculator(score_settings, grader_data.length);
     graderDataEnumerator(grader_data, versions).each(function(answer_grader_data, idx) {
-        var grader = getAnswerGrader(answer_grader_data);
+        var grader = getAnswerGrader(answer_grader_data, score_settings, idx);
         var grader_result = grader(answer[idx]);
         calculator.addAnswer(grader_result.score);
         res.feedback.push(grader_result.feedback);
