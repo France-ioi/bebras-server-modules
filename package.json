@@ -4,7 +4,7 @@
   "description": "Server-side modules to be used by bebras tasks",
   "main": "index.js",
   "dependencies": {
-    "async": "^2.6.0",
+    "async": "^3.2.2",
     "aws-sdk": "^2.141.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.2",
