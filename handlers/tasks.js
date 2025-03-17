@@ -38,7 +38,7 @@ function loadTask(task_id, method, callback) {
         if(method in obj) {
             return callback(false, obj)
         }
-        return callback(new Error('Task does not support ${method} method'))
+        return callback(new Error(`Task does not support ${method} method`))
     }
 
     var id = require.resolve(file)
@@ -134,7 +134,11 @@ module.exports = {
         taskData: function(args, callback) {
             loadTask(args.task.id, 'taskData', (error, obj) => {
                 if(error) return callback(error)
-                loadTaskData(obj, args, callback)
+                loadTaskData(obj, args, function (error, result) {
+                    if(error) return callback(error)
+
+                    callback(null, result.publicData ? result.publicData : result);
+                });
             })
         },
 
