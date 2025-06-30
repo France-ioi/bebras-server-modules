@@ -23,9 +23,13 @@
     "shuffle": "^0.2.2",
     "uuid": "^3.1.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/node": "^24.0.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
   "scripts": {
-    "migrate": "node migrate.js up",
+    "migrate": "node src/migrate.js up",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -37,5 +41,6 @@
   "bugs": {
     "url": "https://github.com/France-ioi/bebras-server-modules/issues"
   },
-  "homepage": "https://github.com/France-ioi/bebras-server-modules#readme"
+  "homepage": "https://github.com/France-ioi/bebras-server-modules#readme",
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }
