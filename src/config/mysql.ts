@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     connectionLimit : 10,
     host: process.env.DB_HOST,
     user: process.env.DB_USER,

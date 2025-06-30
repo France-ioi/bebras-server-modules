@@ -1,7 +1,15 @@
-module.exports = {
-    mysql: require('./mysql'),
-    server: require('./server'),
-    tasks: require('./tasks'),
-    storage: require('./storage'),
-    tokens: require('./tokens'),
-}
+import mysql from './mysql';
+import server from './server';
+import tasks from './tasks';
+import storage from './storage';
+import tokens from './tokens';
+
+const config = {
+    mysql,
+    server,
+    tasks,
+    storage,
+    tokens,
+};
+
+export default config;
