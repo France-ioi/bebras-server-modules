@@ -1,10 +1,12 @@
-var conf = require('../config/storage')
+import conf from '../config/storage';
 
-if(conf.default == 'local') {
-    var storage = require('./storage_local')
-} else if(conf.default == 's3') {
-    var storage = require('./storage_s3')
+let storage: any;
+if (conf.default === 'local') {
+    storage = require('./storage_local').default;
+} else if (conf.default === 's3') {
+    storage = require('./storage_s3').default;
+} else {
+    throw new Error(`Unsupported storage type: ${conf.default}`);
 }
 
-
-module.exports = storage
+export default storage;

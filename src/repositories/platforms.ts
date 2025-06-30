@@ -1,36 +1,32 @@
-var db = require('../libs/db')
+import db from '../libs/db';
+import {PlatformRow} from "../types";
 
-var name_cache = null
+type Callback<T = any> = (error: Error | false | null, result?: T) => void;
 
-function precache(callback) {
-    if(name_cache === null) {
-        var sql = 'SELECT * FROM platforms'
-        db.query(sql, (error, rows) => {
-            if(error) {
-                console.error('Can\'t read platforms table')
-                process.exit()
-            }
-            name_cache = {}
-            rows.map((row) => {
-                name_cache[row.name] = row
-            })
-            callback()
-        })
+let nameCache: Record<string, PlatformRow> | null = null;
+
+function precache(callback: () => void): void {
+    if (nameCache === null) {
+        const sql = 'SELECT * FROM platforms';
+        db.query<PlatformRow[]>(sql, [], (rows) => {
+            nameCache = {};
+            rows.forEach(row => {
+                nameCache![row.name] = row;
+            });
+            callback();
+        });
     } else {
-        callback()
+        callback();
     }
 }
 
-
-module.exports = {
-
-    getByName: function(name, callback) {
+export default {
+    getByName(name: string, callback: Callback<PlatformRow>): void {
         precache(() => {
-            if(name in name_cache) {
-                return callback(false, name_cache[name])
+            if (nameCache && name in nameCache) {
+                return callback(false, nameCache[name]);
             }
-            callback(new Error('Platform not found'))
-        })
-    }
-
-}
+            callback(new Error('Platform not found'));
+        });
+    },
+};

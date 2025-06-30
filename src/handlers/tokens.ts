@@ -1,32 +1,33 @@
-var platforms = require('../repositories/platforms')
-var jwt = require('jsonwebtoken')
+import platforms from '../repositories/platforms';
+import jwt from 'jsonwebtoken';
+import {GenericCallback} from "../types";
 
-module.exports = {
-
+export default {
     path: '/tokens',
-
 
     params: {
         verify: ['token'],
     },
 
-
     actions: {
 
-        verify: function(args, callback) {
-            var payload = jwt.decode(args.token)
-            if(!payload || !payload.platformName) {
+        verify: function(args: {token: string}, callback: GenericCallback) {
+            const payload = jwt.decode(args.token) as { platformName?: string } | null;
+            if (!payload || !payload.platformName) {
                 return callback(new Error('Invalid token'))
             }
             platforms.getByName(payload.platformName, (error, platform) => {
-                if(error) {
+                if (error) {
                     return callback(error)
                 }
-                jwt.verify(args.token, platform.public_key, (error, data) => {
-                    callback(error)
+                if (!platform) {
+                    return callback(new Error('Platform not found'));
+                }
+
+                jwt.verify(args.token, platform.public_key, (error: any) => {
+                    callback(error ?? null);
                 })
             })
         }
-
     }
 }

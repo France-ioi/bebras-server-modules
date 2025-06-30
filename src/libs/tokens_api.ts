@@ -1,35 +1,37 @@
-var fetch = require('isomorphic-fetch')
-var config = require('../config')
-var jwt = require('jsonwebtoken')
-var qs = require('querystring')
-var Url = require('url')
+import fetch from 'isomorphic-fetch';
+import config from '../config';
+import jwt from 'jsonwebtoken';
+import qs from 'querystring';
+import Url from 'url';
+import {AnswerTokenPayload, GenericCallback, TaskTokenPayload} from "../types";
 
-function getTaskParams(itemUrl) {
-    return qs.parse(Url.parse(itemUrl).query)
+function getTaskParams(itemUrl: string) {
+    return qs.parse(Url.parse(itemUrl).query!)
 }
-function getTaskID(params) {
+
+function getTaskID(params: {taskID?: string}): string|null {
     return params.taskID ? params.taskID : null;
 }
 
-module.exports = {
-
-    decodeTask: function(token, callback) {
+export default {
+    decodeTask: function(token: string, callback: GenericCallback) {
+        let payload: TaskTokenPayload;
         if(typeof token == 'object' && config.server.dev_mode) {
             // Devel option : we send an object instead of a token
-            var payload = token;
+            payload = token;
         } else {
-            var payload = jwt.decode(token)
+            payload = jwt.decode(token) as TaskTokenPayload
         }
         if(!payload) {
             return callback(new Error('Task token error: unparseable token'))
         }
-        var params = getTaskParams(payload.itemUrl)
-        var task_id = getTaskID(params)
+        const params = getTaskParams(payload.itemUrl)
+        const task_id = getTaskID(params)
         if(!task_id) {
             return callback(new Error('Task token error: taskID missing from itemUrl'))
         }
         /* XXX No good reason to parse and check random_seed? */
-        var random_seed = parseInt(payload.randomSeed, 10)
+        const random_seed = parseInt(payload.randomSeed, 10)
         if(!Number.isInteger(random_seed) || random_seed < 0) {
             return callback(new Error('Task token error: randomSeed missing or incorrect'))
         }
@@ -45,19 +47,20 @@ module.exports = {
     },
 
 
-    decodeAnswer: function(token, callback) {
+    decodeAnswer: function(token: string, callback: GenericCallback) {
+        let payload: AnswerTokenPayload;
         if(typeof token == 'object' && config.server.dev_mode) {
             // Devel option : we send an object instead of a token
-            var payload = token;
+            payload = token;
         } else {
-            var payload = jwt.decode(token)
+            payload = jwt.decode(token) as AnswerTokenPayload
         }
-        var params = getTaskParams(payload.itemUrl)
-        var task_id = getTaskID(params)
+        const params = getTaskParams(payload.itemUrl)
+        const task_id = getTaskID(params)
         if(!task_id) {
             return callback(new Error('Answer token error: taskID missed in itemUrl'))
         }
-        var random_seed = parseInt(payload.randomSeed, 10)
+        const random_seed = parseInt(payload.randomSeed, 10)
         if(!Number.isInteger(random_seed) || random_seed < 0) {
             return callback(new Error('Answer token error: randomSeed missed or incorrect'))
         }
@@ -71,18 +74,16 @@ module.exports = {
             payload
         })
     },
-
-
-    verify: function(token, callback) {
+    verify: function(token: string, callback: GenericCallback) {
         if(config.server.dev_mode) {
             return callback()
         }
-        var body = JSON.stringify({
+        const body = JSON.stringify({
             action: 'verify',
             token
         })
         fetch(
-            config.tokens.service_url, {
+            config.tokens.service_url!, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -96,5 +97,4 @@ module.exports = {
             callback(error)
         })
     }
-
 }

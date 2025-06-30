@@ -1,11 +1,12 @@
-function scoreCalculator(score_settings, nb_total) {
+import {ScoreSettings} from "../../types";
 
-    var nb_valid = 0;
-    var nb_answers = 0;
+function scoreCalculator(score_settings: ScoreSettings, nb_total: number) {
+    let nb_valid = 0;
+    let nb_answers = 0;
 
     return {
 
-        addAnswer: function(answer_score) {
+        addAnswer: function(answer_score: any) {
             nb_answers += 1;
             if(typeof answer_score === 'boolean') {
                 nb_valid += answer_score ? 1 : 0;
@@ -15,14 +16,17 @@ function scoreCalculator(score_settings, nb_total) {
         },
 
         getScore: function() {
+            let score: number;
             if(score_settings) {
-                var score = (nb_valid / nb_total * (score_settings.maxScore - score_settings.minScore)
+                score = (nb_valid / nb_total * (score_settings.maxScore - score_settings.minScore)
                             + score_settings.minScore
                             + (nb_total - nb_answers) / nb_total * score_settings.noScore);
             } else {
-                var score = nb_valid / nb_total;
+                score = nb_valid / nb_total;
             }
+
             score = Math.round(score);
+
             return score;
         }
     }
@@ -32,12 +36,11 @@ function scoreCalculator(score_settings, nb_total) {
 
 
 
-function graderDataEnumerator(grader_data, versions) {
-
+function graderDataEnumerator(grader_data: any[], versions: any) {
     return {
-        each: function(callback) {
-            for (var i = 0; i < grader_data.length; i++) {
-                var answer_grader_data = grader_data[i];
+        each: function (callback: any) {
+            for (let i = 0; i < grader_data.length; i++) {
+                let answer_grader_data = grader_data[i];
                 if(versions && i in versions) {
                     answer_grader_data = answer_grader_data[versions[i]];
                 }
@@ -45,19 +48,18 @@ function graderDataEnumerator(grader_data, versions) {
             }
         }
     }
-
 }
 
 
 
 
-function getAnswerGrader(grader, score_settings, idx) {
+function getAnswerGrader(grader: any, score_settings: ScoreSettings, idx: number) {
 
-    var question_info = score_settings.questions_info[idx];
+    const question_info = score_settings.questions_info[idx];
 
 
     function getScoreCalculationMethod() {
-        var res = {
+        const res = {
             formula: 'default',
             wrong_answer_penalty: 1
         }
@@ -73,22 +75,23 @@ function getAnswerGrader(grader, score_settings, idx) {
     }
 
 
-    function gradeAnswerArray(given_answer, correct_answer, messages, strict) {
-        var res = {
+    function gradeAnswerArray(given_answer: any, correct_answer: any, messages: any, strict = false) {
+        const res = {
             score: 0,
             feedback: {
                 correct_answer: correct_answer,
-                mistakes: [],
-                messages: messages
+                mistakes: [] as  any[],
+                messages: messages,
+                partial: false,
             }
         }
 
-        var user_correct_answers_amount = 0;
-        var user_incorrect_answers_amount = 0;
+        let user_correct_answers_amount = 0;
+        let user_incorrect_answers_amount = 0;
 
-        for(var i=0; i<given_answer.length; i++) {
+        for(let i=0; i<given_answer.length; i++) {
             if(strict) {
-                var correct = correct_answer[i] === given_answer[i];
+                let correct = correct_answer[i] === given_answer[i];
                 if(correct) {
                     user_correct_answers_amount++;
                 } else {
@@ -96,7 +99,7 @@ function getAnswerGrader(grader, score_settings, idx) {
                 }
                 res.feedback.mistakes.push(correct ? null : given_answer[i]);
             } else {
-                var correct = correct_answer.indexOf(given_answer[i]) !== -1;
+                const correct = correct_answer.indexOf(given_answer[i]) !== -1;
                 if(correct) {
                     user_correct_answers_amount++;
                 } else {
@@ -105,10 +108,10 @@ function getAnswerGrader(grader, score_settings, idx) {
                 }
             }
         }
-        var correct_answers_amount = correct_answer.length;
-        var incorrect_answers_amount = question_info.answers_amount - correct_answers_amount;
+        const correct_answers_amount = correct_answer.length;
+        const incorrect_answers_amount = question_info.answers_amount - correct_answers_amount;
 
-        var method = getScoreCalculationMethod();
+        const method = getScoreCalculationMethod();
 
         switch(method.formula) {
             case "wrong_answer_penalty":
@@ -146,18 +149,18 @@ function getAnswerGrader(grader, score_settings, idx) {
     }
 
 
-    function gradeAnswerTwoDimArray(given_answer, correct_answer, messages) {
-        var res = {
+    function gradeAnswerTwoDimArray(given_answer: any, correct_answer: any, messages: any) {
+        const res = {
             score: true,
             feedback: {
                 correct_answer: correct_answer,
-                mistakes: [],
+                mistakes: [] as any[],
                 messages: messages
             }
         }
-        for(var i = 0; i < given_answer.length; i++) {
-            for(var j = 0; j < given_answer[i].length; j++){
-                var correct = correct_answer[i].indexOf(given_answer[i][j]) !== -1;
+        for(let i = 0; i < given_answer.length; i++) {
+            for(let j = 0; j < given_answer[i].length; j++){
+                const correct = correct_answer[i].indexOf(given_answer[i][j]) !== -1;
                 res.score = res.score && correct;
                 if(!correct) {
                     res.feedback.mistakes.push({ cont: i, item: j });
@@ -173,19 +176,20 @@ function getAnswerGrader(grader, score_settings, idx) {
 
 
 
-    var grader_types = {
+    const grader_types = {
 
-        'function': function(answer) {
+        'function': function(answer: any) {
             // supposed to grade text input answers, so
-            var fres = grader(answer[0]);
+            const fres = grader(answer[0]);
+            let res;
             if (typeof fres === 'object') {
                 // function return object
-                var res = {
+                res = {
                     score: 'score' in fres ? parseFloat(fres.score) || 0 : 0,
                     feedback: {
-                        correct_answer: [],
-                        mistakes: [],
-                        messages: []
+                        correct_answer: [] as any[],
+                        mistakes: [] as any[],
+                        messages: [] as any[],
                     }
                 }
                 if(res.score == 0) {
@@ -199,7 +203,7 @@ function getAnswerGrader(grader, score_settings, idx) {
                 }
             } else {
                 // use result as boolean
-                var res = {
+                res = {
                     score: !!fres,
                     feedback: {
                         correct_answer: [],
@@ -211,16 +215,17 @@ function getAnswerGrader(grader, score_settings, idx) {
                     res.feedback.mistakes = answer;
                 }
             }
+
             return res;
         },
 
 
-        'array': function(answer) {
+        'array': function(answer: any) {
             return gradeAnswerArray(answer, grader, []);
         },
 
 
-        'object': function(answer) {
+        'object': function(answer: any) {
             if(grader.twoDimArray) {
                 return gradeAnswerTwoDimArray(answer, grader.value, grader.messages || []);
             }
@@ -228,8 +233,8 @@ function getAnswerGrader(grader, score_settings, idx) {
         },
 
 
-        'scalar': function(answer) {
-            var score = grader == answer[0];
+        'scalar': function(answer: any) {
+            const score = grader == answer[0];
             return {
                 score: score,
                 feedback: {
@@ -254,22 +259,22 @@ function getAnswerGrader(grader, score_settings, idx) {
 }
 
 
-function grade(grader_data, answer, versions, score_settings) {
-    var res = {
+function grade(grader_data: any, answer: any, versions: any, score_settings: ScoreSettings) {
+    const res = {
         score: 0,
-        feedback: []
+        feedback: [] as any[]
     }
-    var calculator = scoreCalculator(score_settings, grader_data.length);
-    graderDataEnumerator(grader_data, versions).each(function(answer_grader_data, idx) {
-        var grader = getAnswerGrader(answer_grader_data, score_settings, idx);
-        var grader_result = grader(answer[idx]);
+    const calculator = scoreCalculator(score_settings, grader_data.length);
+    graderDataEnumerator(grader_data, versions).each(function(answer_grader_data: any, idx: number) {
+        const grader = getAnswerGrader(answer_grader_data, score_settings, idx);
+        const grader_result = grader(answer[idx]);
         calculator.addAnswer(grader_result.score);
         res.feedback.push(grader_result.feedback);
     });
     res.score = calculator.getScore();
     //console.log(res)
     return res;
-};
+}
 
 
-module.exports = grade;
+export default grade;

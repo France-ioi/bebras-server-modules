@@ -1,15 +1,28 @@
-var mime = require('mime')
+import mime from 'mime';
 
-module.exports = {
-    createBuffer: function(data, callback) {
-        var regex = /^data:(.+);base64,(.*)$/
-        var m = data.match(regex)
-        if(!m || m.length != 3) {
-            return callback(new Error('Can\'t parse base64 data'))
+type BufferResult = {
+    ext: string | null;
+    buffer: Buffer;
+};
+
+type Callback = (err: Error | false, result?: BufferResult) => void;
+
+export default {
+    createBuffer(data: string, callback: Callback): void {
+        const regex = /^data:(.+);base64,(.*)$/;
+        const match = data.match(regex);
+
+        if (!match || match.length !== 3) {
+            return callback(new Error("Can't parse base64 data"));
         }
+
+        const mimeType = match[1];
+        const base64Data = match[2];
+        const ext = mime.getExtension(mimeType);
+
         callback(false, {
-            ext: mime.getExtension(m[1]),
-            buffer: new Buffer(m[2], 'base64')
-        })
-    }
+            ext,
+            buffer: Buffer.from(base64Data, 'base64'),
+        });
+    },
 }

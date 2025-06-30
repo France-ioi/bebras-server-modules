@@ -1,26 +1,31 @@
-var parseArgs = require('mri');
-var conf = require('../config/server');
-var help = require('./help');
+import parseArgs from 'mri';
+import conf from '../config/server';
+import help from './help';
 
-var params = parseArgs(process.argv.slice(2), {
+type Params = {
+    port: number;
+    _: string[];
+    [key: string]: any;
+};
+
+const params: Params = parseArgs(process.argv.slice(2), {
     default: {
-        port: 3000
+        port: conf.port || 3000,
     },
     alias: {
-        p: 'port'
+        p: 'port',
     },
-    unknown(opt) {
-        console.error(`Option "${opt}" is unknown.`)
-        help.server()
-        process.exit(1)
-    }
-})
+    unknown(opt: string): boolean {
+        console.error(`Option "${opt}" is unknown.`);
+        help.server();
+        process.exit(1);
+    },
+});
 
-
-if(!params._[0]) {
-    console.error(`Handler param missed.`)
-    help.server()
-    process.exit(1)
+if (!params._[0]) {
+    console.error(`Handler param missed.`);
+    help.server();
+    process.exit(1);
 }
 
-module.exports = params;
+export default params;

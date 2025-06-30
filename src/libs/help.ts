@@ -1,43 +1,40 @@
-var conf = require('../config/server')
-var fs = require('fs')
-var path = require('path')
+import fs from 'fs';
+import path from 'path';
+import conf from '../config/server';
 
-function formatDir(dir) {
-    var items = []
-    fs.readdirSync(process.cwd() + dir).map((file) => {
-        items.push(file.replace('.js', ''))
-    })
-    return items.join(', ')
+function formatDir(dir: string): string {
+    const items: string[] = [];
+    fs.readdirSync(process.cwd() + dir).forEach(file => {
+        items.push(file.replace('.js', ''));
+    });
+    return items.join(', ');
 }
 
-
-function mainFile() {
-    return path.basename(process.mainModule.filename)
+function mainFile(): string {
+    // `process.mainModule` is deprecated, using `require.main`
+    return path.basename(require.main?.filename ?? '');
 }
 
-
-module.exports =  {
-    server: function() {
-        var text = `
+export default {
+    server(): void {
+        const text = `
 Usage:
     nodejs ${mainFile()} HANDLER [options]
 Handlers:
     ${formatDir('/handlers')}
 Options:
     -p, --port <n>  Port to listen on (default port ${conf.port})
-`
+`;
         console.log(text);
     },
 
-
-    console: function() {
-        var text = `
+    console(): void {
+        const text = `
 Usage:
     nodejs ${mainFile()} COMMAND
 Commands:
     ${formatDir('/commands')}
-`
+`;
         console.log(text);
-    }
-
+    },
 }

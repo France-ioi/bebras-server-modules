@@ -1,21 +1,22 @@
-var tokens_api = require('../libs/tokens_api')
-var grader_data = require('../repositories/grader_data')
-var task_graders = require('../libs/task_graders')
-var safeEval = require('safe-eval')
+import tokensApi from '../libs/tokens_api';
+import graderData from '../repositories/grader_data';
+import taskGraders from '../libs/task_graders';
+// @ts-ignore
+import safeEval from 'safe-eval';
+import {GenericCallback, ScoreSettings, TaskArg} from "../types";
 
-module.exports = {
-
+export default {
     path: '/quiz',
 
     validators: {
 
-        task_id: function(v, callback) {
-            var valid = v.length
+        task_id: function(v: string, callback: GenericCallback) {
+            const valid = v.length
             callback(!valid, v)
         },
 
 
-        data: function(v, callback) {
+        data: function(v: string, callback: GenericCallback) {
             try {
                 safeEval(v)
             } catch(e) {
@@ -24,14 +25,14 @@ module.exports = {
             callback(false, v)
         },
 
-        task: function(v, callback) {
-            tokens_api.verify(v, (error) => {
+        task: function(v: string, callback: GenericCallback) {
+            tokensApi.verify(v, (error) => {
                 if(error) return callback(error)
-                tokens_api.decodeTask(v, callback)
+                tokensApi.decodeTask(v, callback)
             })
         },
 
-        answer: function(v, callback) {
+        answer: function(v: string, callback: GenericCallback) {
             if(v.length) {
                 return callback(false, v)
             }
@@ -43,11 +44,11 @@ module.exports = {
             callback(false, v)
         },
 
-        versions: function(v, callback) {
+        versions: function(v: string, callback: GenericCallback) {
             callback(!v, v)
         },
 
-        score_settings: function(v, callback) {
+        score_settings: function(v: string, callback: GenericCallback) {
             callback(false, v)
         }
     },
@@ -63,32 +64,33 @@ module.exports = {
 
     actions: {
 
-        write: function(args, callback) {
-            grader_data.write(args.task_id, args.data, callback)
+        write: function(args: {task_id: string, data: string}, callback: GenericCallback) {
+            graderData.write(args.task_id, args.data, callback)
         },
 
 
-        delete: function(args, callback) {
-            grader_data.delete(args.task_id, callback)
+        delete: function(args: {task_id: string}, callback: GenericCallback) {
+            graderData.delete(args.task_id, callback)
         },
 
 
-        grade: function(args, callback) {
-            grader_data.read(args.task, function(error, data) {
+        grade: function(args: {task: TaskArg, answer: string, versions: any, score_settings: ScoreSettings}, callback: GenericCallback) {
+            graderData.read(args.task, function(error, data) {
                 if(error) return callback(error)
                 callback(
                     false,
-                    task_graders.quiz.gradeAnswer(data, args.answer, args.versions, args.score_settings)
+                    taskGraders.quiz.gradeAnswer(data, args.answer, args.versions, args.score_settings)
                 );
             })
         },
 
-        grade2: function(args, callback) {
-            grader_data.read(args.task, function(error, data) {
-                if(error) return callback(error)
+        grade2: function(args: {task: TaskArg, answer: string, versions: any, score_settings: ScoreSettings}, callback: GenericCallback) {
+            graderData.read(args.task, function(error, data) {
+                if(error) return callback(error);
+
                 callback(
                     false,
-                    task_graders.quiz2.gradeAnswer(data, args.answer, args.versions, args.score_settings)
+                  taskGraders.quiz2.gradeAnswer(data, args.answer, args.versions, args.score_settings)
                 );
             })
         }

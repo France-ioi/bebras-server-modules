@@ -1,4 +1,7 @@
-require('node-env-file')(__dirname + '/.env')
-var db = require('./libs/db')
-var migrations = require('mysql-migrations')
-migrations.init(db.pool(), __dirname + '/migrations')
+import path from 'path';
+import 'node-env-file';
+import db from './libs/db';
+import migrations from 'mysql-migrations';
+
+require('node-env-file')(path.join(__dirname, '.env'));
+migrations.init(db.pool(), path.join(__dirname, 'migrations'));

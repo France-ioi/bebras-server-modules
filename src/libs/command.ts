@@ -1,17 +1,17 @@
-var fs = require('fs')
-var path = require('path')
+const fs = require('fs')
+const path = require('path')
 
 
-function parseActionPath(p) {
-    var tmp = p.split(':')
+function parseActionPath(p: string) {
+    const tmp = p.split(':')
     return {
         command: tmp[0],
         action: tmp[1]
     }
 }
 
-function loadCommand(name) {
-    var file = path.resolve(process.cwd(), 'commands/' + name + '.js')
+function loadCommand(name: string) {
+    const file = path.resolve(process.cwd(), 'commands/' + name + '.js')
     if(fs.existsSync(file)) {
         return require(file)
     }
@@ -20,9 +20,9 @@ function loadCommand(name) {
 }
 
 
-function runAction(command, action, params) {
+function runAction(command: any, action: string, params: any) {
     if(action in command) {
-        command[action](params, function(error) {
+        command[action](params, function(error: any) {
             if(error) {
                 console.error(error.message)
                 return process.exit(1)
@@ -37,8 +37,8 @@ function runAction(command, action, params) {
 }
 
 
-module.exports = function(params) {
-    var action_path = parseActionPath(params._[0])
-    var command = loadCommand(action_path.command)
+export default function(params: any) {
+    const action_path = parseActionPath(params._[0])
+    const command = loadCommand(action_path.command)
     runAction(command, action_path.action, params)
 }

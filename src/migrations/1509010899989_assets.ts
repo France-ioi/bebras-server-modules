@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     "up": "CREATE TABLE `assets` (\
         `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,\
         `task_id` varchar(255) NOT NULL,\

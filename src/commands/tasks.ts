@@ -1,23 +1,22 @@
-var fs = require('fs')
-var path = require('path')
+import fs from 'fs';
+import path from 'path';
+import {GenericCallback} from "../types";
 
-var file = path.resolve(process.cwd(), 'tasks.json')
-var data = fs.existsSync(file) ? require(file) : {}
+const file = path.resolve(process.cwd(), 'tasks.json');
+let data: any = {};
+if (fs.existsSync(file)) {
+    data = require(file);
+}
 
-
-function save(callback) {
+function save(callback: GenericCallback) {
     fs.writeFile(file, JSON.stringify(data, null, '  '), 'utf8', callback)
 }
 
-
-module.exports = {
-
-    help: function(params, callback) {
+export default {
+    help: function(params: any, callback: GenericCallback) {
         console.log('task:add id path')
     },
-
-
-    add: function(params, callback) {
+    add: function(params: any, callback: GenericCallback) {
         if(!params._[1]) {
             return callback(new Error('Task id missed'))
         }
@@ -30,9 +29,7 @@ module.exports = {
         data[params._[1]] = params._[2]
         save(callback)
     },
-
-
-    remove: function(params, callback) {
+    remove: function(params: any, callback: GenericCallback) {
         if(!params._[1]) {
             callback(new Error('Task id missed'))
         }
@@ -42,20 +39,15 @@ module.exports = {
         }
         callback(new Error('Task not found'))
     },
-
-
-    list: function(params, callback) {
+    list: function(params: any, callback: GenericCallback) {
         console.log(`ID\tPath`)
-        for(var id in data) {
+        for(let id in data) {
             console.log(`${id}\t${data[id]}`)
         }
         callback()
     },
-
-
-    clear: function(params, callback) {
+    clear: function(params: any, callback: GenericCallback) {
         data = {}
         save(callback)
     }
-
 }

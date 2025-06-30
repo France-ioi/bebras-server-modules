@@ -1,11 +1,11 @@
-var db = require('../libs/db')
+import db from "../libs/db"
+import {GenericCallback, GraderRow, TaskArg} from "../types";
 
-module.exports = {
-
-    read: function(task, callback) {
-        var sql = 'SELECT `data` FROM `graders` WHERE `task_id`=? LIMIT 1'
-        var values = [task.id]
-        db.query(sql, values, (rows) => {
+export default{
+    read: function(task: TaskArg, callback: GenericCallback) {
+        const sql = 'SELECT `data` FROM `graders` WHERE `task_id`=? LIMIT 1'
+        const values = [task.id]
+        db.query<GraderRow[]>(sql, values, (rows) => {
             if(rows.length) {
                 callback(false, rows[0].data)
             } else {
@@ -13,28 +13,23 @@ module.exports = {
             }
         })
     },
-
-
-    write: function(task_id, data, callback) {
-        var sql = 'INSERT INTO `graders`\
+    write: function(task_id: string, data: string, callback: GenericCallback) {
+        const sql = 'INSERT INTO `graders`\
             (`task_id`, `data`)\
             VALUES\
             (?, ?)\
             ON DUPLICATE KEY UPDATE\
             `data` = ?'
-        var values = [task_id, data, data]
+        const values = [task_id, data, data]
         db.query(sql, values, () => {
             callback()
         })
     },
-
-
-    delete: function(task_id, callback) {
-        var sql = 'DELETE FROM `graders` WHERE `task_id`=? LIMIT 1'
-        var values = [task_id]
+    delete: function(task_id: string, callback: GenericCallback) {
+        const sql = 'DELETE FROM `graders` WHERE `task_id`=? LIMIT 1'
+        const values = [task_id]
         db.query(sql, values, () => {
             callback()
         })
     }
-
 }

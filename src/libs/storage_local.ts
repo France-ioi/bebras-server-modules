@@ -1,39 +1,33 @@
-var conf = require('../config/storage')
-var fs = require('fs-extra')
-var path = require('path')
+import fs from 'fs-extra';
+import path from 'path';
+import conf from '../config/storage';
 
-module.exports = {
+type Callback = (err?: Error | null) => void;
 
-    relativePath: function() {
-        return conf.local.path
+export default {
+    relativePath(): string|undefined {
+        return conf.local.path;
     },
 
-    absolutePath: function(file) {
-        return path.resolve(process.cwd(), conf.local.path + '/' + file)
+    absolutePath(file: string): string {
+        return path.resolve(process.cwd(), `${conf.local.path}/${file}`);
     },
 
-
-    url: function(file) {
-        return conf.url + '/' + file
+    url(file: string): string {
+        return `${conf.url}/${file}`;
     },
 
-
-    write: function(file, content, callback) {
-        var absolute_path = this.absolutePath(file)
-        fs.ensureDir(path.dirname(absolute_path), (error) => {
-            if(error) {
-                return callback(error)
+    write(file: string, content: string | Buffer, callback: Callback): void {
+        const absolutePath = this.absolutePath(file);
+        fs.ensureDir(path.dirname(absolutePath), (error) => {
+            if (error) {
+                return callback(error);
             }
-            fs.writeFile(absolute_path, content, callback)
-        })
+            fs.writeFile(absolutePath, content, callback);
+        });
     },
 
-
-    remove: function(file, callback) {
-        if(path) {
-            return fs.remove(this.absolutePath(file), callback)
-        }
-        callback()
+    remove(file: string, callback: Callback): void {
+        fs.remove(this.absolutePath(file), callback);
     }
-
 }

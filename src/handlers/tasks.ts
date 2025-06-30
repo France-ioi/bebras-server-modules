@@ -1,9 +1,10 @@
-var jwt = require('jsonwebtoken')
-var path = require('path')
-var fs = require('fs')
-var config = require('../config/tasks')
-var data_repo = require('../repositories/task_data')
-var tokens_api = require('../libs/tokens_api')
+import jwt from 'jsonwebtoken';
+import path from 'path';
+import fs from 'fs';
+import config from '../config/tasks';
+import data_repo from '../repositories/task_data';
+import tokens_api from '../libs/tokens_api';
+import {GenericCallback, TaskArg} from "../types";
 
 //TODO: watch tasks dir and reset modules cache?
 /*
@@ -12,14 +13,14 @@ function requireUncached(module){
     return require(module)
 }
 */
-var TASK_DATA_KEY = '___TASK_DATA'
+const TASK_DATA_KEY = '___TASK_DATA'
 
 //TODO: move to repositories
-var file = path.resolve(process.cwd(), 'tasks.json')
-var data = fs.existsSync(file) ? require(file) : {}
+const file = path.resolve(process.cwd(), 'tasks.json')
+const data = fs.existsSync(file) ? require(file) : {}
 
 
-function getFile(task_id) {
+function getFile(task_id: string) {
     if(!(task_id in data)) {
         return null;
     }
@@ -27,21 +28,21 @@ function getFile(task_id) {
 }
 
 
-function loadTask(task_id, method, callback) {
-    var file = getFile(task_id)
+function loadTask(task_id: string, method: string, callback: GenericCallback) {
+    const file = getFile(task_id)
     if(!file) {
         return callback(new Error('Task not found'))
     }
 
     function obj() {
-        var obj = require(file)
+        const obj = require(file!)
         if(method in obj) {
             return callback(false, obj)
         }
         return callback(new Error(`Task does not support ${method} method`))
     }
 
-    var id = require.resolve(file)
+    const id = require.resolve(file)
     if(require.cache[id]) {
         return obj()
     }
@@ -54,15 +55,13 @@ function loadTask(task_id, method, callback) {
     })
 }
 
-
-
-function loadTaskData(obj, args, callback) {
+function loadTaskData(obj: any, args: {task: TaskArg}, callback: GenericCallback) {
     if(!obj.config || !obj.config.cache_task_data) {
         return obj.taskData(args, callback)
     }
     data_repo.read(args.task, TASK_DATA_KEY, (error, data) => {
         if(!error) return callback(null, data)
-        obj.taskData(args, (error, data) => {
+        obj.taskData(args, (error: Error|null, data: any) => {
             if(error) return callback(error)
             data_repo.write(args.task, TASK_DATA_KEY, data, 0, (error) => {
                 callback(error, data)
@@ -71,67 +70,61 @@ function loadTaskData(obj, args, callback) {
     })
 }
 
-function algoreaFormatDate(date) {
-    var d = date.getDate()
-    var m = date.getMonth() + 1
+function algoreaFormatDate(date: Date) {
+    const d = date.getDate()
+    const m = date.getMonth() + 1
     // Algorea TokenParser format: d-m-Y
     return (d < 10 ? '0' + d : d) + '-' + (m < 10 ? '0' + m : m) + '-' + date.getFullYear()
 }
 
 
-module.exports = {
+export default {
 
     path: '/tasks',
 
     validators: {
 
-        task: function(v, callback) {
+        task: function(v: string, callback: GenericCallback) {
             tokens_api.verify(v, (error) => {
                 if(error) return callback(error)
                 tokens_api.decodeTask(v, callback)
             })
         },
 
-        answer: function(v, callback) {
+        answer: function(v: string, callback: GenericCallback) {
             tokens_api.verify(v, (error) => {
                 if(error) return callback(error)
                 tokens_api.decodeAnswer(v, callback)
             })
         },
 
-        min_score: function(v, callback) {
-            var valid = v == parseInt(v, 10) && v >= 0
+        min_score: function(v: any, callback: GenericCallback) {
+            const valid = v == parseInt(v, 10) && v >= 0
             callback(!valid, v)
         },
 
-        max_score: function(v, callback) {
-            var valid = v == parseInt(v, 10) && v >= 0
+        max_score: function(v: any, callback: GenericCallback) {
+            const valid = v == parseInt(v, 10) && v >= 0
             callback(!valid, v)
         },
 
-        no_score: function(v, callback) {
-            var valid = v == parseInt(v, 10) && v >= 0
+        no_score: function(v: any, callback: GenericCallback) {
+            const valid = v == parseInt(v, 10) && v >= 0
             callback(!valid, v)
         },
 
-        request: function(v, callback) {
+        request: function(v: string, callback: GenericCallback) {
             callback(null, v);
         },
-
     },
-
-
     params: {
         taskData: ['task'],
         taskHintData: ['task'],
         gradeAnswer: ['task', 'answer', 'min_score', 'max_score', 'no_score'],
         requestHint: ['task', 'request'],
     },
-
-
     actions: {
-
-        taskData: function(args, callback) {
+        taskData: function(args: {task: TaskArg}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskData', (error, obj) => {
                 if(error) return callback(error)
                 loadTaskData(obj, args, function (error, result) {
@@ -141,9 +134,7 @@ module.exports = {
                 });
             })
         },
-
-
-        taskHintData: function(args, callback) {
+        taskHintData: function(args: {task: TaskArg}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskHintData', (error, obj) => {
                 if(error) return callback(error)
                 loadTaskData(obj, args, (error, task_data) => {
@@ -156,15 +147,13 @@ module.exports = {
                 })
             })
         },
-
-
-        gradeAnswer: function(args, callback) {
+        gradeAnswer: function(args: {task: TaskArg, answer: {payload: any}}, callback: GenericCallback) {
             loadTask(args.task.id, 'gradeAnswer', (error, obj) => {
                 if(error) return callback(error)
                 loadTaskData(obj, args, (error, task_data) => {
                     if(error) return callback(error)
                     try {
-                        obj.gradeAnswer(args, task_data, (error, data) => {
+                        obj.gradeAnswer(args, task_data, (error: Error|null, data: any) => {
                             if(error) return callback(error);
                             for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer']) {
                                 data[key] = args.answer.payload[key];
@@ -179,12 +168,11 @@ module.exports = {
                 })
             })
         },
-
-        requestHint: function(args, callback) {
+        requestHint: function(args: {task: TaskArg}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskData', (error, obj) => {
                 if(error) return callback(error)
                 /* Task's requestHint is expected to return the askedHint*/
-                obj.requestHint(args, (error, askedHint) => {
+                obj.requestHint(args, (error: Error|null, askedHint: any) => {
                     if(error) return callback(error);
                     const payload = {askedHint: askedHint, date: algoreaFormatDate(new Date)};
                     const hintToken = jwt.sign(payload, config.grader_key, {algorithm: 'RS512'});
@@ -192,6 +180,5 @@ module.exports = {
                 });
             })
        },
-
     }
 }

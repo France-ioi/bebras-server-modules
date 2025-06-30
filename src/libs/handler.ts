@@ -1,15 +1,12 @@
-var express = require('express')
-var fs = require('fs')
-var path = require('path')
-var _ = require('lodash')
-var async = require('async')
-var jwt = require('jsonwebtoken')
-var platforms = require('../repositories/platforms')
+import express, {Express} from 'express'
+import fs from 'fs'
+import path from 'path'
+import _ from 'lodash'
+import async from 'async'
+import {GenericCallback} from "../types";
 
-
-
-function load(name) {
-    var file = path.resolve(process.cwd(), 'handlers/' + name + '.js')
+function load(name: string) {
+    const file = path.resolve(process.cwd(), 'handlers/' + name + '.js')
     if(fs.existsSync(file)) {
         return require(file)
     }
@@ -18,7 +15,7 @@ function load(name) {
 }
 
 
-function resultSuccess(data) {
+function resultSuccess(data: string) {
     return {
         success: true,
         data
@@ -26,7 +23,7 @@ function resultSuccess(data) {
 }
 
 
-function resultError(error) {
+function resultError(error: any) {
     return {
         success: false,
         error: error.message
@@ -34,19 +31,19 @@ function resultError(error) {
 }
 
 
-function actionParams(body, handler, callback) {
-    var params = handler.params[body.action] || []
-    var validators = handler.validators || {}
-    var res = {}
+function actionParams(body: any, handler: any, callback: GenericCallback) {
+    const params = handler.params[body.action] || []
+    const validators = handler.validators || {}
+    const res: any = {}
 
     async.each(
         params,
-        (p, callback) => {
+        (p: any, callback) => {
             if(!(p in body)) {
                 return callback(new Error('Missed param: ' + p))
             }
             if(validators[p]) {
-                validators[p](body[p], (error, value) => {
+                validators[p](body[p], (error: any, value: any) => {
                     if(error) {
                         return callback(error instanceof Error ? error : new Error(`Invalid parameter: ${p}`))
                     }
@@ -66,7 +63,7 @@ function actionParams(body, handler, callback) {
 
 
 
-function validateTask(task, callback) {
+function validateTask(task: {id: string, random_seed: any}, callback: GenericCallback) {
     if(!task.id) {
         return callback(new Error('Task id missed'))
     }
@@ -79,8 +76,8 @@ function validateTask(task, callback) {
 }
 
 
-function verifyBody(body, handler, callback) {
-    var args = {}
+function verifyBody(body: any, handler: any, callback: any) {
+    let args: any = {}
 /*
     platforms.get(body.platform_id, (error, platform) => {
         if(error) {
@@ -122,14 +119,14 @@ function verifyBody(body, handler, callback) {
 }
 
 
-module.exports = function(app, name) {
-    var handler = load(name)
+export default function(app: Express, name: string) {
+    const handler = load(name)
     app.post(handler.path, (req, res) => {
-        verifyBody(req.body, handler, (error, action, args) => {
+        verifyBody(req.body, handler, (error: any, action: string, args: any) => {
             if(error) {
                 return res.json(resultError(error))
             }
-            handler.actions[action](args, (error, data) => {
+            handler.actions[action](args, (error: any, data: string) => {
                 if(error) {
                     return res.json(resultError(error))
                 }

@@ -1,3 +1,9 @@
-require('node-env-file')(__dirname + '/.env')
-var params = require('./libs/params')
-require('./libs/command')(params)
+import path from 'path';
+import nodeEnvFile from 'node-env-file';
+import params from './libs/params';
+import command from './libs/command';
+
+// Load environment variables from .env file
+nodeEnvFile(path.join(__dirname, '.env'));
+
+command(params);
