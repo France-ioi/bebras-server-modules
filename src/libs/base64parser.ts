@@ -18,7 +18,8 @@ export default {
 
         const mimeType = match[1];
         const base64Data = match[2];
-        const ext = mime.extension(mimeType);
+        // @ts-ignore
+        const ext = mime.getExtension(mimeType);
 
         callback(false, {
             ext,
