@@ -9,14 +9,14 @@ Some bebras tasks, for instance [alkindi-task-enigma](https://github.com/France-
 1. Install a recent version of node.js (tested with version 10 ; doesn't work with some older versions)
 2. Create a MySQL database for bebras-server-modules
 3. Create a `.env` configuration file using `.env.example` as template (check documentation below)
-4. `npm install`
-5. Install pm2 globally : `npm install pm2 -g`
+4. `yarn install`
+5. Install pm2 globally : `yarn global add pm2`
 
 ## Usage
 
 You must first add task modules to bebras-server-modules (for instance, the `server-modules` from [alkindi-task-enigma](https://github.com/France-ioi/alkindi-task-enigma). You can do so with :
 ```
-node command.js tasks:add TASK_ID TASK_PATH
+node dist/command.js tasks:add TASK_ID TASK_PATH
 ```
 with `TASK_ID` being an unique identifier for the task, and `TASK_PATH` the absolute path to the js file of the module.
 

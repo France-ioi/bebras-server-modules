@@ -1,4 +1,3 @@
-
 import mysql, { Pool, PoolConnection, FieldInfo } from 'mysql';
 import conf from '../config/mysql';
 

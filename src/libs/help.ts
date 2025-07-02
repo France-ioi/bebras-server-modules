@@ -4,7 +4,7 @@ import conf from '../config/server';
 
 function formatDir(dir: string): string {
     const items: string[] = [];
-    fs.readdirSync(process.cwd() + dir).forEach(file => {
+    fs.readdirSync(process.cwd() + '/dist' + dir).forEach(file => {
         items.push(file.replace('.js', ''));
     });
     return items.join(', ');
@@ -12,14 +12,14 @@ function formatDir(dir: string): string {
 
 function mainFile(): string {
     // `process.mainModule` is deprecated, using `require.main`
-    return path.basename(require.main?.filename ?? '');
+    return path.basename(require.main?.filename ?? '').replace(/\.ts/, '.js');
 }
 
 export default {
     server(): void {
         const text = `
 Usage:
-    nodejs ${mainFile()} HANDLER [options]
+    node dist/${mainFile()} HANDLER [options]
 Handlers:
     ${formatDir('/handlers')}
 Options:
@@ -31,7 +31,7 @@ Options:
     console(): void {
         const text = `
 Usage:
-    nodejs ${mainFile()} COMMAND
+    node dist/${mainFile()} COMMAND
 Commands:
     ${formatDir('/commands')}
 `;

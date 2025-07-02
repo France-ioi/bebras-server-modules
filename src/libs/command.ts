@@ -1,6 +1,5 @@
-const fs = require('fs')
-const path = require('path')
-
+import fs from 'fs';
+import path from 'path';
 
 function parseActionPath(p: string) {
     const tmp = p.split(':')
@@ -11,9 +10,9 @@ function parseActionPath(p: string) {
 }
 
 function loadCommand(name: string) {
-    const file = path.resolve(process.cwd(), 'commands/' + name + '.js')
+    const file = path.resolve(process.cwd(), 'dist/commands/' + name + '.js')
     if(fs.existsSync(file)) {
-        return require(file)
+        return require(file).default;
     }
     console.error(`Command ${name} not found.`)
     process.exit();

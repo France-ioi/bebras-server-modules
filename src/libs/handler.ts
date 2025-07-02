@@ -6,9 +6,9 @@ import async from 'async'
 import {GenericCallback} from "../types";
 
 function load(name: string) {
-    const file = path.resolve(process.cwd(), 'handlers/' + name + '.js')
+    const file = path.resolve(process.cwd(), 'dist/handlers/' + name + '.js')
     if(fs.existsSync(file)) {
-        return require(file)
+        return require(file).default
     }
     console.log(`Handler ${name} not found.`)
     process.exit();
