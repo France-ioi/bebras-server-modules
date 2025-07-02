@@ -39,6 +39,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "cmd": "node dist/command.js",
     "migrate": "node dist/migrate.js up",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -1,7 +1,7 @@
 import db from "../libs/db"
 import {GenericCallback, GraderRow, TaskArg} from "../types";
 
-export default{
+export default {
     read: function(task: TaskArg, callback: GenericCallback) {
         const sql = 'SELECT `data` FROM `graders` WHERE `task_id`=? LIMIT 1'
         const values = [task.id]

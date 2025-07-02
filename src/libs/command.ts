@@ -10,7 +10,9 @@ function parseActionPath(p: string) {
 }
 
 async function loadCommand(name: string) {
-    const file = path.resolve(process.cwd(), 'dist/commands/' + name + '.js')
+    // @ts-ignore
+    const filePath = process[Symbol.for("ts-node.register.instance")] ? 'src/commands/' + name + '.ts' : 'dist/commands/' + name + '.js'
+    const file = path.resolve(process.cwd(), filePath);
     if (fs.existsSync(file)) {
         return (await import(file)).default;
     }

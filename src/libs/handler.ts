@@ -6,7 +6,9 @@ import async from 'async'
 import {GenericCallback} from "../types";
 
 async function load(name: string) {
-    const file = path.resolve(process.cwd(), 'dist/handlers/' + name + '.js')
+    // @ts-ignore
+    const filePath = process[Symbol.for("ts-node.register.instance")] ? 'src/handlers/' + name + '.ts' : 'dist/handlers/' + name + '.js';
+    const file = path.resolve(process.cwd(), filePath);
     if (fs.existsSync(file)) {
         return (await import(file)).default;
     }
