@@ -1,7 +1,7 @@
 import mime from 'mime';
 
 type BufferResult = {
-    ext: string | null;
+    ext: string | undefined;
     buffer: Buffer;
 };
 
@@ -18,7 +18,7 @@ export default {
 
         const mimeType = match[1];
         const base64Data = match[2];
-        const ext = mime.getExtension(mimeType);
+        const ext = mime.extension(mimeType);
 
         callback(false, {
             ext,

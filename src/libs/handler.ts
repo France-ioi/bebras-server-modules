@@ -5,10 +5,10 @@ import _ from 'lodash'
 import async from 'async'
 import {GenericCallback} from "../types";
 
-function load(name: string) {
+async function load(name: string) {
     const file = path.resolve(process.cwd(), 'dist/handlers/' + name + '.js')
-    if(fs.existsSync(file)) {
-        return require(file).default
+    if (fs.existsSync(file)) {
+        return (await import(file)).default;
     }
     console.log(`Handler ${name} not found.`)
     process.exit();
@@ -119,8 +119,8 @@ function verifyBody(body: any, handler: any, callback: any) {
 }
 
 
-export default function(app: Express, name: string) {
-    const handler = load(name)
+export default async function(app: Express, name: string) {
+    const handler = await load(name);
     app.post(handler.path, (req, res) => {
         verifyBody(req.body, handler, (error: any, action: string, args: any) => {
             if(error) {

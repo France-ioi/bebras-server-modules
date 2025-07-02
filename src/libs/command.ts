@@ -9,10 +9,10 @@ function parseActionPath(p: string) {
     }
 }
 
-function loadCommand(name: string) {
+async function loadCommand(name: string) {
     const file = path.resolve(process.cwd(), 'dist/commands/' + name + '.js')
-    if(fs.existsSync(file)) {
-        return require(file).default;
+    if (fs.existsSync(file)) {
+        return (await import(file)).default;
     }
     console.error(`Command ${name} not found.`)
     process.exit();
@@ -36,8 +36,8 @@ function runAction(command: any, action: string, params: any) {
 }
 
 
-export default function(params: any) {
+export default async function(params: any) {
     const action_path = parseActionPath(params._[0])
-    const command = loadCommand(action_path.command)
+    const command = await loadCommand(action_path.command)
     runAction(command, action_path.action, params)
 }
