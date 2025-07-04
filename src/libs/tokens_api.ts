@@ -41,7 +41,8 @@ export default {
             random_seed,
             hints_requested: payload.sHintsRequested,
             params,
-            payload
+            payload,
+            token,
             /* Is there a good reason not to pass the full token? */
         })
     },

@@ -1,0 +1,48 @@
+import {GenericCallback, TaskArg} from "../types";
+import tokens_api from "../libs/tokens_api";
+import {loadTask} from "../libs/tasks";
+import aiGenerator from "../libs/ai/generator";
+
+export default {
+    path: '/ai',
+    validators: {
+        task: function(v: string, callback: GenericCallback) {
+            tokens_api.verify(v, (error) => {
+                if(error) return callback(error)
+                tokens_api.decodeTask(v, callback)
+            })
+        },
+        prompt: function(v: string, callback: GenericCallback) {
+            const valid = v && v.length
+            callback(!valid, v)
+        },
+        model: function(v: string, callback: GenericCallback) {
+            const valid = v && v.length
+            callback(!valid, v)
+        },
+    },
+    params: {
+        generateImage: ['task', 'prompt', 'model'],
+    },
+    actions: {
+        generateImage: function(args: {task: TaskArg, prompt: string, model: string}, callback: GenericCallback) {
+            console.log('generate', args);
+            loadTask(args.task.id, 'taskData', async (error, obj) => {
+                if(error) return callback(error)
+
+                // TODO: check quotas
+                console.log('obj', obj);
+                // TODO: query polling
+
+                try {
+                    const image = await aiGenerator.generateImage(args.prompt, args.model);
+                    console.log({image})
+
+                    callback(null, image);
+                } catch (e) {
+                    callback(e);
+                }
+            })
+        },
+    }
+}
