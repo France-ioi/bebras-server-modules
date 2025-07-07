@@ -60,17 +60,22 @@ export interface ScoreSettings {
   score_calculation: any;
 }
 
-export interface UserTaskRow {
+export interface AiGenerationRow {
   id: string;
   task_id: string;
   user_id: string;
   platform_id: string;
-  attempts: number;
-  last_attempt_date: string;
+  generations: number;
+  last_generation_date: string;
+  last_generation_id: string;
+  last_generation_result: string;
 }
 
 export interface TaskObject {
   config: TaskConfig;
+  taskHintData: (args: {task: TaskArg}, task_data: any, callback: GenericCallback) => Promise<void>,
+  gradeAnswer: (args: {task: TaskArg, answer: {payload: any}}, task_data: any, callback: GenericCallback) => Promise<void>,
+  requestHint: (args: {task: TaskArg}, callback: GenericCallback) => Promise<void>,
 }
 
 export interface TaskConfig {

@@ -106,11 +106,11 @@ export default {
         },
         taskHintData: function(args: {task: TaskArg}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskHintData', (error, obj) => {
-                if(error) return callback(error)
+                if (error) return callback(error)
                 loadTaskData(obj, args, async (error, task_data) => {
                     if(error) return callback(error)
                     try {
-                        await obj.taskHintData(args, task_data, callback)
+                        await obj!.taskHintData(args, task_data, callback)
                     } catch (ex) {
                         return callback(ex);
                     }
@@ -119,12 +119,12 @@ export default {
         },
         gradeAnswer: function(args: {task: TaskArg, answer: {payload: any}}, callback: GenericCallback) {
             loadTask(args.task.id, 'gradeAnswer', (error, obj) => {
-                if(error) return callback(error)
+                if (error) return callback(error)
                 loadTaskData(obj, args, async (error, task_data) => {
                     if(error) return callback(error)
                     try {
-                        await obj.gradeAnswer(args, task_data, (error: Error|null, data: any) => {
-                            if(error) return callback(error);
+                        await obj!.gradeAnswer(args, task_data, (error, data: any) => {
+                            if (error) return callback(error);
                             for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer']) {
                                 data[key] = args.answer.payload[key];
                             }
@@ -143,7 +143,7 @@ export default {
                 if(error) return callback(error)
                 /* Task's requestHint is expected to return the askedHint*/
                 try {
-                    await obj.requestHint(args, (error: Error|null, askedHint: any) => {
+                    await obj!.requestHint(args, (error, askedHint: any) => {
                         if(error) return callback(error);
                         const payload = {askedHint: askedHint, date: algoreaFormatDate(new Date)};
                         const hintToken = jwt.sign(payload, config.grader_key, {algorithm: 'RS512'});
