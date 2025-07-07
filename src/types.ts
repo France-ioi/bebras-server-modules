@@ -35,12 +35,16 @@ export interface TaskArg {
   id: string;
   random_seed: string;
   hints_requested: number;
+  payload: TaskTokenPayload;
 }
 
 export interface TaskTokenPayload {
   itemUrl: string;
   randomSeed: string;
   sHintsRequested: string;
+  idTask: string;
+  idUser: string;
+  platformName: string;
 }
 
 export interface AnswerTokenPayload extends TaskTokenPayload {
@@ -54,4 +58,28 @@ export interface ScoreSettings {
   noScore: number;
   questions_info: any;
   score_calculation: any;
+}
+
+export interface UserTaskRow {
+  id: string;
+  task_id: string;
+  user_id: string;
+  platform_id: string;
+  attempts: number;
+  last_attempt_date: string;
+}
+
+export interface TaskObject {
+  config: TaskConfig;
+}
+
+export interface TaskConfig {
+  cache_task_data: boolean;
+  ai_quota: AIQuotaConfig;
+}
+
+export interface AIQuotaConfig {
+  free_tries: number;
+  wait_time: number;
+  exponential_factor: number;
 }

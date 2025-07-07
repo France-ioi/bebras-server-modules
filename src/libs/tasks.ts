@@ -1,4 +1,4 @@
-import {GenericCallback} from "../types";
+import {GenericCallback, TaskObject} from "../types";
 import path from "path";
 import fs from "fs";
 
@@ -14,7 +14,7 @@ function getFile(task_id: string) {
 }
 
 
-export function loadTask(task_id: string, method: string, callback: GenericCallback) {
+export function loadTask(task_id: string, method: string, callback: GenericCallback<TaskObject>) {
   const file = getFile(task_id)
   if(!file) {
     return callback(new Error('Task not found'))
