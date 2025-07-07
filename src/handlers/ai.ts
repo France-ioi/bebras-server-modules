@@ -28,9 +28,10 @@ export default {
     },
     params: {
         generateImage: ['task', 'prompt', 'generationId', 'model'],
+        getEmbedding: ['task', 'prompt', 'model'],
     },
     actions: {
-        generateImage: function(args: {task: TaskArg, prompt: string, generationId: string, model: string}, callback: GenericCallback) {
+        generateImage: function(args: {task: TaskArg, prompt: string, generationId: string, model: string, size: string}, callback: GenericCallback) {
             console.log('generate', args);
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if(error) return callback(error)
@@ -45,7 +46,7 @@ export default {
                     }
 
 
-                    const image = await aiGenerator.generateImage(args.prompt, args.model);
+                    const image = await aiGenerator.generateImage(args.prompt, args.model, args.size);
                     console.log({image})
                     // TODO: store the results in S3
 
@@ -55,5 +56,13 @@ export default {
                 }
             })
         },
+        getEmbedding: async function(args: {task: TaskArg, prompt: string, model: string}, callback: GenericCallback) {
+            try {
+                const result = await aiGenerator.getEmbedding(args.prompt, args.model);
+                callback(null, result);
+            } catch (e) {
+                callback(e);
+            }
+        }
     }
 }
