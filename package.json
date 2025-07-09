@@ -19,6 +19,7 @@
     "mysql-migrations": "^1.0.4",
     "openai": "^5.8.2",
     "range": "0.0.3",
+    "replicate": "^1.0.1",
     "safe-eval": "^0.4.1",
     "seedrandom": "^2.4.3",
     "shuffle": "^0.2.2",

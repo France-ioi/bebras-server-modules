@@ -7,15 +7,22 @@ export async function openAIGenerateImageFromPrompt(prompt: string, model: strin
 
   console.log("Generating image from prompt", prompt, process.env['OPENAI_API_KEY']);
 
-  //return '';
-  const response = await client.images.generate({
-    prompt,
-    n: 1,
-    // @ts-ignore
-    size,
-    response_format: 'b64_json',
-    model,
-  });
+  try {
+    const response = await client.images.generate({
+      prompt,
+      n: 1,
+      // @ts-ignore
+      size,
+      response_format: 'b64_json',
+      model,
+    });
 
-  return response.data![0].b64_json;
+    return response.data![0].b64_json;
+  } catch (e: any) {
+    if ('image_generation_user_error' === e.error?.type) {
+      throw new Error("Impossible de générer une image correspondant à votre prompt, veuillez le modifier.");
+    }
+
+    throw e;
+  }
 }

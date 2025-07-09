@@ -1,5 +1,6 @@
 import {openAIGenerateImageFromPrompt} from "./dall_e";
 import {getOpenAIEmbedding} from "./openai";
+import {replicateGenerateImageFromPrompt} from "./replicate";
 
 export type ImageGenerator = (prompt: string, model: string, size: string) => Promise<string|undefined>;
 export type EmbeddingGenerator = (input: string, model: string) => Promise<number[]>;
@@ -10,6 +11,7 @@ const availableTextModels = {
 
 const availableImageModels: Record<string, ImageGenerator> = {
   'dall-e-2': openAIGenerateImageFromPrompt,
+  'flux-schnell': replicateGenerateImageFromPrompt,
 };
 
 const availableEmbeddingModels: Record<string, EmbeddingGenerator> = {
