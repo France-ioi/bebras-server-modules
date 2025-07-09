@@ -81,7 +81,7 @@ function checkUserAllowed(aiGenerationRow: AiGenerationRow, aiQuotaConfig: AIQuo
   if (timeSinceLastGeneration < minTime) {
     const timeToWait = Math.ceil(minTime - timeSinceLastGeneration);
 
-    throw new ExceededQuotaError(`You have to wait ${timeToWait} secs before you can make another AI generation`, timeToWait);
+    throw new ExceededQuotaError(`Vous avez déjà fait plusieurs essais. Réfléchissez bien, pendant au moins ${timeToWait} secondes avant de faire votre prochain essai.`, timeToWait);
   }
 }
 
