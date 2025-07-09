@@ -52,6 +52,7 @@ export default {
 
                     callback(null, image);
                 } catch (e) {
+                    console.error(e);
                     callback(e);
                 }
             })

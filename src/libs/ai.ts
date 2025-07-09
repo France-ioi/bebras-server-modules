@@ -45,7 +45,7 @@ export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: s
 
   await checkGenerationIdUsage(generationId, taskId, userId, platform.id);
 
-  const sql = `SELECT last_generation_result FROM ai_generations WHERE \`task_id\` = ? AND \`user_id\` = ? AND \`platform_id\` = ? LIMIT 1`
+  const sql = `SELECT * FROM ai_generations WHERE \`task_id\` = ? AND \`user_id\` = ? AND \`platform_id\` = ? LIMIT 1`
   const values = [taskId, userId, platform.id];
   const rows = await db.queryAsync<AiGenerationRow[]>(sql, values);
   if (0 === rows.length) {

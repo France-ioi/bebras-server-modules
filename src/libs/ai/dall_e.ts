@@ -5,21 +5,17 @@ export async function openAIGenerateImageFromPrompt(prompt: string, model: strin
     apiKey: process.env['OPENAI_API_KEY'],
   });
 
-  try {
-    console.log("Generating image from prompt", prompt, process.env['OPENAI_API_KEY']);
+  console.log("Generating image from prompt", prompt, process.env['OPENAI_API_KEY']);
 
-    //return '';
-    const response = await client.images.generate({
-      prompt,
-      n: 1,
-      // @ts-ignore
-      size,
-      response_format: 'b64_json',
-      model,
-    });
+  //return '';
+  const response = await client.images.generate({
+    prompt,
+    n: 1,
+    // @ts-ignore
+    size,
+    response_format: 'b64_json',
+    model,
+  });
 
-    return response.data![0].b64_json;
-  } catch (error) {
-    console.error(error);
-  }
+  return response.data![0].b64_json;
 }
