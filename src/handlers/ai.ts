@@ -17,6 +17,10 @@ export default {
             const valid = v && v.length
             callback(!valid, v)
         },
+        size: function(v: string, callback: GenericCallback) {
+            const valid = v && v.length
+            callback(!valid, v)
+        },
         generationId: function(v: string, callback: GenericCallback) {
             const valid = v && v.length
             callback(!valid, v)
@@ -27,12 +31,32 @@ export default {
         },
     },
     params: {
-        generateImage: ['task', 'prompt', 'generationId', 'model'],
+        generateText: ['task', 'prompt', 'generationId', 'model'],
+        generateImage: ['task', 'prompt', 'generationId', 'model', 'size'],
         getEmbedding: ['task', 'prompt', 'model'],
     },
     actions: {
+        generateText: function(args: {task: TaskArg, prompt: string, generationId: string, model: string}, callback: GenericCallback) {
+            loadTask(args.task.id, 'taskData', async (error, obj) => {
+                if (error) return callback(error);
+
+                try {
+                    const result = await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
+                    if (result) {
+                        callback(null, result);
+                        return;
+                    }
+
+                    const text = await aiGenerator.generateText(args.prompt, args.model);
+
+                    callback(null, text);
+                } catch (e) {
+                    console.error(e);
+                    callback(e);
+                }
+            })
+        },
         generateImage: function(args: {task: TaskArg, prompt: string, generationId: string, model: string, size: string}, callback: GenericCallback) {
-            console.log('generate', args);
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if(error) return callback(error)
 

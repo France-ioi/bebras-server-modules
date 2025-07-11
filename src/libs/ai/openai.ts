@@ -1,10 +1,10 @@
 import {OpenAI} from "openai";
 
-export async function getOpenAIEmbedding(input: string, model: string): Promise<number[]> {
-  const client = new OpenAI({
-    apiKey: process.env['OPENAI_API_KEY'],
-  });
+const client = new OpenAI({
+  apiKey: process.env['OPENAI_API_KEY'],
+});
 
+export async function getOpenAIEmbedding(input: string, model: string): Promise<number[]> {
   const embedding = await client.embeddings.create({
     model,
     input,
@@ -12,4 +12,14 @@ export async function getOpenAIEmbedding(input: string, model: string): Promise<
   });
 
   return embedding.data[0].embedding;
+}
+
+export async function openAIGenerateTextFromPrompt(input: string, model: string): Promise<string> {
+  const response = await client.responses.create({
+    model: 'gpt-4o',
+    // instructions: 'You are a coding assistant that talks like a pirate',
+    input,
+  });
+
+  return response.output_text;
 }

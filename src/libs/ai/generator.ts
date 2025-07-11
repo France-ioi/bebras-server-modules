@@ -1,12 +1,13 @@
 import {openAIGenerateImageFromPrompt} from "./dall_e";
-import {getOpenAIEmbedding} from "./openai";
+import {openAIGenerateTextFromPrompt, getOpenAIEmbedding} from "./openai";
 import {replicateGenerateImageFromPrompt} from "./replicate";
 
+export type TextGenerator = (prompt: string, model: string) => Promise<string|undefined>;
 export type ImageGenerator = (prompt: string, model: string, size: string) => Promise<string|undefined>;
 export type EmbeddingGenerator = (input: string, model: string) => Promise<number[]>;
 
-const availableTextModels = {
-
+const availableTextModels: Record<string, TextGenerator> = {
+  'gpt-4.1-nano': openAIGenerateTextFromPrompt,
 };
 
 const availableImageModels: Record<string, ImageGenerator> = {
@@ -19,22 +20,20 @@ const availableEmbeddingModels: Record<string, EmbeddingGenerator> = {
 };
 
 const availableModels = {
-  text: {},
+  text: availableTextModels,
   image: availableImageModels,
   embeddings: availableEmbeddingModels,
 }
 
 class AIGenerator {
-  public getAvailableTextModels() {
-    return availableTextModels;
-  }
-
-  public getAvailableImageModels() {
-    return availableImageModels;
-  }
-
   public async generateText(prompt: string, model: string) {
+    if (!(model in availableModels.text)) {
+      throw new Error(`This model is not supported for text generation: ${model}.`);
+    }
 
+    const generator = availableModels.text[model];
+
+    return await generator(prompt, model);
   }
 
   public async getEmbedding(input: string, model: string) {

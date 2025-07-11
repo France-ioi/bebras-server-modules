@@ -12,6 +12,7 @@ export async function replicateGenerateImageFromPrompt(prompt: string, model: st
     const input = {
       prompt,
       output_format: 'jpg',
+      megapixels: "0.25",
     };
 
     const output = await client.run("black-forest-labs/flux-schnell", { input });
