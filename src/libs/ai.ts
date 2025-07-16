@@ -58,6 +58,11 @@ export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: s
     await db.queryAsync(sql, values);
   } else {
     const aiGenerationRow = rows[0];
+
+    if (String(aiGenerationRow.last_generation_id) === generationId && aiGenerationRow.last_generation_result) {
+      return aiGenerationRow.last_generation_result;
+    }
+
     checkUserAllowed(aiGenerationRow, aiQuotaConfig);
 
     const sql = 'UPDATE `ai_generations` SET generations = generations + 1, last_generation_date = NOW(), last_generation_id = ?\
@@ -65,9 +70,15 @@ export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: s
     const values = [generationId, aiGenerationRow.id];
 
     await db.queryAsync(sql, values);
-
-    return aiGenerationRow.last_generation_result;
   }
+}
+
+export async function storeAIUsage(generationId: string, result: string): Promise<void> {
+  const sql = 'UPDATE `ai_generations` SET last_generation_result = ?\
+            WHERE last_generation_id = ?';
+  const values = [result, generationId];
+
+  await db.queryAsync(sql, values);
 }
 
 function checkUserAllowed(aiGenerationRow: AiGenerationRow, aiQuotaConfig: AIQuotaConfig): void {
@@ -94,7 +105,7 @@ async function checkGenerationIdUsage(generationId: string, taskId: string, user
   }
 
   const aiGenerationRow = rows[0];
-  if (aiGenerationRow.task_id !== taskId || aiGenerationRow.user_id !== userId || aiGenerationRow.platform_id === platformId) {
+  if (aiGenerationRow.task_id !== taskId || String(aiGenerationRow.user_id) !== userId || aiGenerationRow.platform_id !== platformId) {
     throw new Error("This generation id does not belong to you");
   }
 }

@@ -2,7 +2,7 @@ import {GenericCallback, TaskArg} from "../types";
 import tokens_api from "../libs/tokens_api";
 import {loadTask} from "../libs/tasks";
 import aiGenerator from "../libs/ai/generator";
-import {requestNewAIUsage} from "../libs/ai";
+import {requestNewAIUsage, storeAIUsage} from "../libs/ai";
 
 export default {
     path: '/ai',
@@ -48,6 +48,9 @@ export default {
                     }
 
                     const text = await aiGenerator.generateText(args.prompt, args.model);
+                    if (text) {
+                        await storeAIUsage(args.generationId, text);
+                    }
 
                     callback(null, text);
                 } catch (e) {
