@@ -2,7 +2,13 @@ import {GenericCallback, TaskArg} from "../types";
 import tokens_api from "../libs/tokens_api";
 import {loadTask} from "../libs/tasks";
 import aiGenerator from "../libs/ai/generator";
-import {requestNewAIUsage, storeAIUsage} from "../libs/ai";
+import {
+    checkGenerationIdUsage,
+    fetchGenerationIdFromCache,
+    getUsageParameters,
+    requestNewAIUsage,
+    storeAIUsage
+} from "../libs/ai";
 
 export default {
     path: '/ai',
@@ -23,7 +29,7 @@ export default {
         },
         generationId: function(v: string, callback: GenericCallback) {
             const valid = v && v.length
-            callback(!valid, v)
+            callback(!valid, v.substring(0, 16));
         },
         model: function(v: string, callback: GenericCallback) {
             const valid = v && v.length
@@ -41,7 +47,17 @@ export default {
                 if (error) return callback(error);
 
                 try {
-                    const result = await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
+                    let {userId, platform} = await getUsageParameters(args.task.payload);
+
+                    await checkGenerationIdUsage(args.generationId, args.task.id, userId, platform.id);
+
+                    const result = await fetchGenerationIdFromCache(args.generationId);
+                    if (result) {
+                        callback(null, result);
+                        return;
+                    }
+
+                    await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
                     if (result) {
                         callback(null, result);
                         return;
@@ -66,12 +82,7 @@ export default {
                 console.log('obj', obj!.config);
 
                 try {
-                    const result = await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
-                    if (result) {
-                        callback(null, result);
-                        return;
-                    }
-
+                    await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
 
                     const image = await aiGenerator.generateImage(args.prompt, args.model, args.size);
                     console.log({image})
@@ -94,3 +105,5 @@ export default {
         }
     }
 }
+
+

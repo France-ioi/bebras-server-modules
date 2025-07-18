@@ -68,7 +68,6 @@ export interface AiGenerationRow {
   generations: number;
   last_generation_date: string;
   last_generation_id: string;
-  last_generation_result: string;
 }
 
 export interface TaskObject {

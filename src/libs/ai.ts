@@ -12,7 +12,7 @@ class ExceededQuotaError extends Error {
   }
 }
 
-async function getUsageParameters(tokenPayload: {idUser: string; platformName: string}) {
+export async function getUsageParameters(tokenPayload: {idUser: string; platformName: string}) {
   let {idUser: userId, platformName} = tokenPayload;
   if (!userId || !platformName) {
     if (config.server.dev_mode) {
@@ -40,7 +40,7 @@ async function getUsageParameters(tokenPayload: {idUser: string; platformName: s
   return {userId, platform};
 }
 
-export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: string, platformName: string}, aiQuotaConfig: AIQuotaConfig, generationId: string): Promise<string|null|undefined> {
+export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: string, platformName: string}, aiQuotaConfig: AIQuotaConfig, generationId: string): Promise<void> {
   let {userId, platform} = await getUsageParameters(tokenPayload);
 
   await checkGenerationIdUsage(generationId, taskId, userId, platform.id);
@@ -59,9 +59,6 @@ export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: s
   } else {
     const aiGenerationRow = rows[0];
 
-    if (String(aiGenerationRow.last_generation_id) === generationId && aiGenerationRow.last_generation_result) {
-      return aiGenerationRow.last_generation_result;
-    }
 
     checkUserAllowed(aiGenerationRow, aiQuotaConfig);
 
@@ -73,10 +70,25 @@ export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: s
   }
 }
 
+export async function fetchGenerationIdFromCache(generationId: string): Promise<string|null> {
+  const sql = `SELECT generation_result FROM ai_generations_cache WHERE \`generation_id\` = ? LIMIT 1`
+  const values = [generationId];
+  const rows = await db.queryAsync<{generation_result: string}[]>(sql, values);
+  if (0 === rows.length) {
+    return null;
+  }
+
+  return rows[0].generation_result;
+}
+
 export async function storeAIUsage(generationId: string, result: string): Promise<void> {
-  const sql = 'UPDATE `ai_generations` SET last_generation_result = ?\
-            WHERE last_generation_id = ?';
-  const values = [result, generationId];
+  const sql = 'INSERT INTO `ai_generations_cache`\
+            (`generation_id`, `generation_result`)\
+            VALUES\
+            (?, ?)\
+            ON DUPLICATE KEY UPDATE\
+            `generation_result` = ?'
+  const values = [generationId, result, result];
 
   await db.queryAsync(sql, values);
 }
@@ -96,7 +108,7 @@ function checkUserAllowed(aiGenerationRow: AiGenerationRow, aiQuotaConfig: AIQuo
   }
 }
 
-async function checkGenerationIdUsage(generationId: string, taskId: string, userId: string, platformId: string) {
+export async function checkGenerationIdUsage(generationId: string, taskId: string, userId: string, platformId: string) {
   const sql = `SELECT task_id, user_id, platform_id FROM ai_generations WHERE \`last_generation_id\` = ? LIMIT 1`
   const values = [generationId];
   const rows = await db.queryAsync<AiGenerationRow[]>(sql, values);
@@ -108,22 +120,4 @@ async function checkGenerationIdUsage(generationId: string, taskId: string, user
   if (aiGenerationRow.task_id !== taskId || String(aiGenerationRow.user_id) !== userId || aiGenerationRow.platform_id !== platformId) {
     throw new Error("This generation id does not belong to you");
   }
-}
-
-export async function getGenerationResult(generationId: string, taskId: string, tokenPayload: {idUser: string, platformName: string}): Promise<string|undefined> {
-  let {userId, platform} = await getUsageParameters(tokenPayload);
-
-  await checkGenerationIdUsage(generationId, taskId, userId, platform.id);
-
-  const sql = `SELECT last_generation_result FROM ai_generations WHERE \`task_id\` = ? AND \`user_id\` = ? AND \`platform_id\` = ? LIMIT 1`
-  const values = [taskId, userId, platform.id];
-
-  const rows = await db.queryAsync<AiGenerationRow[]>(sql, values);
-  if (0 === rows.length) {
-    throw new Error(`This generation id is unknown: ${generationId}`);
-  }
-
-  const aiGeneration = rows[0];
-
-  return aiGeneration.last_generation_result;
 }
