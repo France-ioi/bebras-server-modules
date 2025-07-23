@@ -27,7 +27,11 @@ export default {
         });
     },
 
-    remove(file: string, callback: Callback): void {
+    remove(file: string|null, callback: Callback): void {
+        if (null === file) {
+            return;
+        }
+
         fs.remove(this.absolutePath(file), callback);
     }
-}
+};

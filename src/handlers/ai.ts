@@ -9,6 +9,9 @@ import {
     requestNewAIUsage,
     storeAIUsage
 } from "../libs/ai";
+import storage from "../libs/storage";
+import base64parser from "../libs/base64parser";
+import uuid from "uuid";
 
 export default {
     path: '/ai',
@@ -84,15 +87,50 @@ export default {
                 console.log('obj', obj!.config);
 
                 try {
+                    let {userId, platform} = await getUsageParameters(args.task.payload);
+                    await checkGenerationIdUsage(args.generationId, args.task.id, userId, platform.id);
+
+                    const result = await fetchGenerationIdFromCache(args.generationId);
+                    if (result) {
+                        callback(null, result);
+                        return;
+                    }
+
                     if (!args.free) {
                         await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
                     }
 
-                    const image = await aiGenerator.generateImage(args.prompt, args.model, args.size);
+                    let image = await aiGenerator.generateImage(args.prompt, args.model, args.size);
                     console.log({image})
-                    // TODO: store the results in S3
 
-                    callback(null, image);
+                    if (image) {
+                        image = `data:image/jpeg;base64,${image}`;
+
+                        await storeAIUsage(args.generationId, image);
+
+                        base64parser.createBuffer(image, (error, file) => {
+                            if(error || !file) {
+                                return callback(error)
+                            }
+
+                            const path = args.task.id + '/' + uuid.v4() + '.' + file.ext;
+                            console.log({path}, file);
+
+                            storage.write(path, file.buffer, (error: any) => {
+                                if (error) {
+                                    console.error('error while storing', error);
+                                    return callback(error)
+                                }
+
+                                const imageUrl = storage.url(path);
+                                console.log('ok stored', {path, imageUrl});
+
+                                callback(null, imageUrl);
+                            })
+                        })
+                    } else {
+                        throw new Error("No image generated");
+                    }
                 } catch (e) {
                     console.error(e);
                     callback(e);
