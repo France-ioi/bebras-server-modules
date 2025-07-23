@@ -106,8 +106,6 @@ export default {
                     if (image) {
                         image = `data:image/jpeg;base64,${image}`;
 
-                        await storeAIUsage(args.generationId, image);
-
                         base64parser.createBuffer(image, (error, file) => {
                             if(error || !file) {
                                 return callback(error)
@@ -123,6 +121,8 @@ export default {
                                 }
 
                                 const imageUrl = storage.url(path);
+
+                                storeAIUsage(args.generationId, imageUrl);
                                 console.log('ok stored', {path, imageUrl});
 
                                 callback(null, imageUrl);
