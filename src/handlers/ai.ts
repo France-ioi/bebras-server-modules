@@ -47,6 +47,9 @@ export default {
                 if (error) return callback(error);
 
                 try {
+                    let {userId, platform} = await getUsageParameters(args.task.payload);
+                    await checkGenerationIdUsage(args.generationId, args.task.id, userId, platform.id);
+
                     const result = await fetchGenerationIdFromCache(args.generationId);
                     if (result) {
                         callback(null, result);
@@ -54,11 +57,9 @@ export default {
                     }
 
                     if (!args.free) {
-                        let {userId, platform} = await getUsageParameters(args.task.payload);
-                        await checkGenerationIdUsage(args.generationId, args.task.id, userId, platform.id);
+                        await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
                     }
 
-                    await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
                     if (result) {
                         callback(null, result);
                         return;
