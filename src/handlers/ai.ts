@@ -37,24 +37,25 @@ export default {
         },
     },
     params: {
-        generateText: ['task', 'prompt', 'generationId', 'model'],
-        generateImage: ['task', 'prompt', 'generationId', 'model', 'size'],
+        generateText: ['task', 'prompt', 'generationId', 'model', 'free'],
+        generateImage: ['task', 'prompt', 'generationId', 'model', 'size', 'free'],
         getEmbedding: ['task', 'prompt', 'model'],
     },
     actions: {
-        generateText: function(args: {task: TaskArg, prompt: string, generationId: string, model: string}, callback: GenericCallback) {
+        generateText: function(args: {task: TaskArg, prompt: string, generationId: string, model: string, free: boolean}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if (error) return callback(error);
 
                 try {
-                    let {userId, platform} = await getUsageParameters(args.task.payload);
-
-                    await checkGenerationIdUsage(args.generationId, args.task.id, userId, platform.id);
-
                     const result = await fetchGenerationIdFromCache(args.generationId);
                     if (result) {
                         callback(null, result);
                         return;
+                    }
+
+                    if (!args.free) {
+                        let {userId, platform} = await getUsageParameters(args.task.payload);
+                        await checkGenerationIdUsage(args.generationId, args.task.id, userId, platform.id);
                     }
 
                     await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
@@ -75,14 +76,16 @@ export default {
                 }
             })
         },
-        generateImage: function(args: {task: TaskArg, prompt: string, generationId: string, model: string, size: string}, callback: GenericCallback) {
+        generateImage: function(args: {task: TaskArg, prompt: string, generationId: string, model: string, size: string, free: boolean}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if(error) return callback(error)
 
                 console.log('obj', obj!.config);
 
                 try {
-                    await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
+                    if (!args.free) {
+                        await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, args.generationId);
+                    }
 
                     const image = await aiGenerator.generateImage(args.prompt, args.model, args.size);
                     console.log({image})
