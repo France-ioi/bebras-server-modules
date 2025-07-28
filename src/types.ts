@@ -72,6 +72,7 @@ export interface AiGenerationRow {
 
 export interface TaskObject {
   config: TaskConfig;
+  loadGraderData: (data: any) => void,
   taskHintData: (args: {task: TaskArg}, task_data: any, callback: GenericCallback) => Promise<void>,
   gradeAnswer: (args: {task: TaskArg, answer: {payload: any}}, task_data: any, callback: GenericCallback) => Promise<void>,
   requestHint: (args: {task: TaskArg}, callback: GenericCallback) => Promise<void>,

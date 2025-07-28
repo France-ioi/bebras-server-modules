@@ -1,6 +1,8 @@
-import {GenericCallback, TaskObject} from "../types";
+import {GenericCallback, GraderRow, TaskObject} from "../types";
 import path from "path";
 import fs from "fs";
+import db from "./db";
+import safeEval from "safe-eval";
 
 //TODO: move to repositories
 const file = path.resolve(process.cwd(), 'tasks.json')
@@ -15,11 +17,47 @@ function getFile(task_id: string) {
 
 
 export function loadTask(task_id: string, method: string, callback: GenericCallback<TaskObject>) {
-  const file = getFile(task_id)
-  if(!file) {
-    return callback(new Error('Task not found'))
-  }
+  let file = getFile(task_id)
+  if (!file) {
+    // Try to load task from graders database
+    const sql = 'SELECT `data` FROM `graders` WHERE `task_id`=? LIMIT 1'
+    const values = [task_id]
+    db.query<GraderRow[]>(sql, values, (rows) => {
+      if (rows.length) {
+        const data = rows[0].data;
+        let innerData: {taskTemplate?: string};
+        try {
+          innerData = safeEval(data)
+        } catch (e) {
+          return callback(new Error('Unreadable grader data'));
+        }
 
+        if (innerData.taskTemplate) {
+          file = getFile(innerData.taskTemplate);
+          if (!file) {
+            callback(new Error(`Task template not found: ${innerData.taskTemplate}`));
+          } else {
+            loadTaskFromFile(file, method, (error, data) => {
+              if (!error && data) {
+                data.loadGraderData(innerData);
+              }
+
+              callback(error, data);
+            });
+          }
+        } else {
+          callback(new Error('No task template for this task'))
+        }
+      } else {
+        callback(new Error('Task not found'))
+      }
+    });
+  } else {
+    loadTaskFromFile(file, method, callback);
+  }
+}
+
+export function loadTaskFromFile(file: string, method: string, callback: GenericCallback<TaskObject>) {
   function obj() {
     const obj = require(file!)
     if(method in obj) {
