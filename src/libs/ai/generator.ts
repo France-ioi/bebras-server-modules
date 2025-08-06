@@ -7,6 +7,9 @@ export type ImageGenerator = (prompt: string, model: string, size: string) => Pr
 export type EmbeddingGenerator = (input: string, model: string) => Promise<number[]>;
 
 const availableTextModels: Record<string, TextGenerator> = {
+  'gpt-4o': openAIGenerateTextFromPrompt,
+  'gpt-4.1': openAIGenerateTextFromPrompt,
+  'gpt-4.1-mini': openAIGenerateTextFromPrompt,
   'gpt-4.1-nano': openAIGenerateTextFromPrompt,
 };
 

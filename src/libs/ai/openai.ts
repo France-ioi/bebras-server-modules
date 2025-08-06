@@ -16,7 +16,7 @@ export async function getOpenAIEmbedding(input: string, model: string): Promise<
 
 export async function openAIGenerateTextFromPrompt(input: string, model: string): Promise<string> {
   const response = await client.responses.create({
-    model: 'gpt-4o',
+    model,
     // instructions: 'You are a coding assistant that talks like a pirate',
     input,
   });
