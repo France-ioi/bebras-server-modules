@@ -1,62 +1,72 @@
 import {openAIGenerateImageFromPrompt} from "./dall_e";
 import {openAIGenerateTextFromPrompt, getOpenAIEmbedding} from "./openai";
 import {replicateGenerateImageFromPrompt} from "./replicate";
+import {geminiGenerateTextFromPrompt} from "./gemini";
 
 export type TextGenerator = (prompt: string, model: string) => Promise<string|undefined>;
 export type ImageGenerator = (prompt: string, model: string, size: string) => Promise<string|undefined>;
 export type EmbeddingGenerator = (input: string, model: string) => Promise<number[]>;
 
-const availableTextModels: Record<string, TextGenerator> = {
-  'gpt-4o': openAIGenerateTextFromPrompt,
-  'gpt-4.1': openAIGenerateTextFromPrompt,
-  'gpt-4.1-mini': openAIGenerateTextFromPrompt,
-  'gpt-4.1-nano': openAIGenerateTextFromPrompt,
+const availableTextProviders: Record<string, TextGenerator> = {
+  'openai': openAIGenerateTextFromPrompt,
+  'gemini': geminiGenerateTextFromPrompt,
 };
 
-const availableImageModels: Record<string, ImageGenerator> = {
-  'dall-e-2': openAIGenerateImageFromPrompt,
-  'flux-schnell': replicateGenerateImageFromPrompt,
+const availableImageProviders: Record<string, ImageGenerator> = {
+  'openai': openAIGenerateImageFromPrompt,
+  'replicate': replicateGenerateImageFromPrompt,
 };
 
-const availableEmbeddingModels: Record<string, EmbeddingGenerator> = {
-  'text-embedding-3-small': getOpenAIEmbedding,
+const availableEmbeddingProviders: Record<string, EmbeddingGenerator> = {
+  'openai': getOpenAIEmbedding,
 };
 
-const availableModels = {
-  text: availableTextModels,
-  image: availableImageModels,
-  embeddings: availableEmbeddingModels,
+const availableModelProviders = {
+  text: availableTextProviders,
+  image: availableImageProviders,
+  embeddings: availableEmbeddingProviders,
 }
 
 class AIGenerator {
+  public extractModelInfo(model: string): {provider: string, model: string} {
+    const [provider, providerModel] = model.split('/');
+
+    return {
+      provider,
+      model: providerModel,
+    };
+  }
   public async generateText(prompt: string, model: string) {
-    if (!(model in availableModels.text)) {
-      throw new Error(`This model is not supported for text generation: ${model}.`);
+    const modelInfo = this.extractModelInfo(model);
+    if (!(modelInfo.provider in availableModelProviders.text)) {
+      throw new Error(`This provider is not supported for text generation: ${modelInfo.provider}.`);
     }
 
-    const generator = availableModels.text[model];
+    const generator = availableModelProviders.text[modelInfo.provider];
 
-    return await generator(prompt, model);
+    return await generator(prompt, modelInfo.model);
   }
 
   public async getEmbedding(input: string, model: string) {
-    if (!(model in availableModels.embeddings)) {
-      throw new Error(`This model is not supported for image generation: ${model}.`);
+    const modelInfo = this.extractModelInfo(model);
+    if (!(modelInfo.provider in availableModelProviders.embeddings)) {
+      throw new Error(`This provider is not supported for embedding generation: ${modelInfo.provider}.`);
     }
 
-    const generator = availableModels.embeddings[model];
+    const generator = availableModelProviders.embeddings[modelInfo.provider];
 
-    return await generator(input, model);
+    return await generator(input, modelInfo.model);
   }
 
   public async generateImage(prompt: string, model: string, size: string) {
-    if (!(model in availableModels.image)) {
-      throw new Error(`This model is not supported for image generation: ${model}.`);
+    const modelInfo = this.extractModelInfo(model);
+    if (!(modelInfo.provider in availableModelProviders.image)) {
+      throw new Error(`This provider is not supported for image generation: ${modelInfo.provider}.`);
     }
 
-    const generator = availableModels.image[model];
+    const generator = availableModelProviders.image[modelInfo.provider];
 
-    return await generator(prompt, model, size);
+    return await generator(prompt, modelInfo.model, size);
   }
 }
 
