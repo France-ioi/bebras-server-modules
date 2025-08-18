@@ -105,7 +105,7 @@ function checkUserAllowed(aiGenerationRow: AiGenerationRow, aiQuotaConfig: AIQuo
   }
 }
 
-export function generateGenerationIdFromPrompt(prompt: string) {
+export function generateGenerationIdFromPrompt(prompt: string): string {
   let h1 = murmurhash3_32_gc(prompt, 0);
 
   return String(h1) + String(murmurhash3_32_gc(h1 + prompt, 0)).slice(0, 7); // Extend the hash
