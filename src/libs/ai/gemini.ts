@@ -8,5 +8,9 @@ export async function geminiGenerateTextFromPrompt(input: string, model: string)
     contents: input,
   });
 
-  return response.text!;
+  if (!response.text) {
+    throw new Error("AI model returned no text from prompt.");
+  }
+
+  return response.text;
 }
