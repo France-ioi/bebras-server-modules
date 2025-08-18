@@ -125,7 +125,7 @@ export default {
                     try {
                         await obj!.gradeAnswer(args, task_data, (error, data: any) => {
                             if (error) return callback(error);
-                            for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer']) {
+                            for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer', 'idItemLocal']) {
                                 data[key] = args.answer.payload[key];
                             }
                             data.date = algoreaFormatDate(new Date)
