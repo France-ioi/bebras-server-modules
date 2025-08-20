@@ -124,9 +124,9 @@ export default {
                 loadTaskData(obj, args, async (error, task_data) => {
                     if (error) return callback(error)
 
-                    longPollingHandler.backgroundExecute((executionCallback: GenericCallback) => {
+                    longPollingHandler.backgroundExecute(async (executionCallback: GenericCallback) => {
                         try {
-                            obj!.gradeAnswer(args, task_data, (error, data: any) => {
+                            await obj!.gradeAnswer(args, task_data, (error, data: any) => {
                                 if (error) return executionCallback(error);
                                 for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer', 'idItemLocal']) {
                                     data[key] = args.answer.payload[key];

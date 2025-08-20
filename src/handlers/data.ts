@@ -1,6 +1,7 @@
 import {GenericCallback} from "../types";
 import data from "../repositories/task_data";
 import tokens_api from "../libs/tokens_api";
+import task_advancement from "../repositories/task_advancement";
 
 export default {
     path: '/data',
@@ -33,6 +34,8 @@ export default {
     params: {
         read: ['task', 'key'],
         write: ['task', 'key','value','duration'],
+        readTaskAdvancement: ['task', 'key'],
+        writeTaskAdvancement: ['task', 'key','value','duration'],
         delete: ['task', 'key'],
         empty: ['task']
     },
@@ -57,6 +60,22 @@ export default {
 
         empty: function(args: {task: any}, callback: GenericCallback) {
             data.empty(args.task, callback)
-        }
+        },
+
+        readTaskAdvancement: async function(args: {task: any, key: string}, callback: GenericCallback) {
+            const {userId, platform} = await tokens_api.extractUserAndPlatform(args.task);
+            try {
+                const value = await task_advancement.read(userId, platform, args.key);
+                callback(null, value);
+            } catch (error) {
+                callback(error);
+            }
+        },
+
+        writeTaskAdvancement: async function(args: {task: any, key: string, value: string, duration: number}, callback: GenericCallback) {
+            const {userId, platform} = await tokens_api.extractUserAndPlatform(args.task);
+            await task_advancement.write(userId, platform, args.key, args.value, args.duration);
+            callback();
+        },
     }
 }

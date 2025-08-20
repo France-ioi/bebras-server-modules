@@ -2,6 +2,7 @@ import config from "../config";
 import db from "./db";
 import {AIQuotaConfig, PlatformRow, AiGenerationRow} from "../types";
 import platforms from "../repositories/platforms";
+import tokens_api from "./tokens_api";
 
 class ExceededQuotaError extends Error {
   public timeToWait: number;
@@ -12,36 +13,8 @@ class ExceededQuotaError extends Error {
   }
 }
 
-export async function getUsageParameters(tokenPayload: {idUser: string; platformName: string}) {
-  let {idUser: userId, platformName} = tokenPayload;
-  if (!userId || !platformName) {
-    if (config.server.dev_mode) {
-      userId = config.server.dev_user_id!;
-      platformName = config.server.dev_platform_name!;
-    } else {
-      throw new Error(`User ID or platform name are mandatory`);
-    }
-  }
-
-  const platform = await new Promise<PlatformRow|undefined>((resolve, reject) => {
-    platforms.getByName(platformName, (error: any, result) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    });
-  })
-
-  if (!platform) {
-    throw new Error(`Platform ${platform} not found`);
-  }
-
-  return {userId, platform};
-}
-
 export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: string, platformName: string}, aiQuotaConfig: AIQuotaConfig, generationId: string): Promise<void> {
-  let {userId, platform} = await getUsageParameters(tokenPayload);
+  let {userId, platform} = await tokens_api.extractUserAndPlatform(tokenPayload);
 
   const sql = `SELECT * FROM ai_generations WHERE \`task_id\` = ? AND \`user_id\` = ? AND \`platform_id\` = ? LIMIT 1`
   const values = [taskId, userId, platform.id];
