@@ -63,7 +63,7 @@ export default {
         },
 
         readTaskAdvancement: async function(args: {task: any, key: string}, callback: GenericCallback) {
-            const {userId, platform} = await tokens_api.extractUserAndPlatform(args.task);
+            const {userId, platform} = await tokens_api.extractUserAndPlatform(args.task.payload);
             try {
                 const value = await task_advancement.read(userId, platform, args.key);
                 callback(null, value);
@@ -73,7 +73,7 @@ export default {
         },
 
         writeTaskAdvancement: async function(args: {task: any, key: string, value: string, duration: number}, callback: GenericCallback) {
-            const {userId, platform} = await tokens_api.extractUserAndPlatform(args.task);
+            const {userId, platform} = await tokens_api.extractUserAndPlatform(args.task.payload);
             await task_advancement.write(userId, platform, args.key, args.value, args.duration);
             callback();
         },
