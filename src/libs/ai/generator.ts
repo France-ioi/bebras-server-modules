@@ -1,7 +1,7 @@
 import {openAIGenerateImageFromPrompt} from "./dall_e";
 import {openAIGenerateTextFromPrompt, getOpenAIEmbedding} from "./openai";
 import {replicateGenerateImageFromPrompt} from "./replicate";
-import {geminiGenerateTextFromPrompt} from "./gemini";
+import {geminiGenerateImageFromPrompt, geminiGenerateTextFromPrompt} from "./gemini";
 
 export type TextGenerator = (prompt: string, model: string) => Promise<string|undefined>;
 export type ImageGenerator = (prompt: string, model: string, size: string) => Promise<string|undefined>;
@@ -14,6 +14,7 @@ const availableTextProviders: Record<string, TextGenerator> = {
 
 const availableImageProviders: Record<string, ImageGenerator> = {
   'openai': openAIGenerateImageFromPrompt,
+  'gemini': geminiGenerateImageFromPrompt,
   'replicate': replicateGenerateImageFromPrompt,
 };
 
