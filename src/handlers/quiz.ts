@@ -27,7 +27,7 @@ function makeGradeAnswer(gradeFunc: (data: string, answer: string, versions: str
 
             // Only generate the score token if we received an answer token
             const scoreToken = {
-                score: gradingResult.score,
+                score: gradingResult.score.toString(),
                 idUser: args.task.payload.idUser,
                 idTask: args.task.payload.idTask,
                 itemUrl: args.task.payload.itemUrl,

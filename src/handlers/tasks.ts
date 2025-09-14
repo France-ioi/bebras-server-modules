@@ -132,7 +132,11 @@ export default {
                                     data[key] = args.answer.payload[key];
                                 }
                                 data.date = algoreaFormatDate(new Date)
-                                data.token = jwt.sign(data, config.grader_key, {algorithm: 'RS512'})
+                                const tokenData = {
+                                    ...data,
+                                    score: data.score.toString()
+                                };
+                                data.token = jwt.sign(tokenData, config.grader_key, { algorithm: 'RS512' })
                                 executionCallback(false, data)
                             });
                         } catch (ex) {
