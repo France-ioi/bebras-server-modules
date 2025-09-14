@@ -3,7 +3,42 @@ import graderData from '../repositories/grader_data';
 import taskGraders from '../libs/task_graders';
 // @ts-ignore
 import safeEval from 'safe-eval';
+import jwt from 'jsonwebtoken';
+import config from '../config/tasks';
 import {GenericCallback, ScoreSettings, TaskArg} from "../types";
+
+function algoreaFormatDate(date: Date) {
+    const d = date.getDate()
+    const m = date.getMonth() + 1
+    // Algorea TokenParser format: d-m-Y
+    return (d < 10 ? '0' + d : d) + '-' + (m < 10 ? '0' + m : m) + '-' + date.getFullYear()
+}
+
+function makeGradeAnswer(gradeFunc: (data: string, answer: string, versions: string, score_settings: ScoreSettings) => any) {
+    return function (args: { task: TaskArg, answer: string, versions: any, score_settings: ScoreSettings }, callback: GenericCallback) {
+        graderData.read(args.task, function (error, data) {
+            if (error) return callback(error)
+
+            const gradingResult = gradeFunc(data, args.answer, args.versions, args.score_settings);
+
+            const scoreToken = {
+                score: gradingResult.score,
+                idUser: args.task.payload.idUser,
+                idTask: args.task.payload.idTask,
+                itemUrl: args.task.payload.itemUrl,
+                platformName: args.task.payload.platformName,
+                randomSeed: args.task.payload.randomSeed,
+                idAttempt: args.task.payload.idAttempt,
+                date: algoreaFormatDate(new Date())
+            };
+            const result = {
+                ...gradingResult,
+                token: jwt.sign(scoreToken, config.grader_key, { algorithm: 'RS512' })
+            };
+            callback(false, result);
+        })
+    }
+}
 
 export default {
     path: '/quiz',
@@ -74,25 +109,7 @@ export default {
         },
 
 
-        grade: function(args: {task: TaskArg, answer: string, versions: any, score_settings: ScoreSettings}, callback: GenericCallback) {
-            graderData.read(args.task, function(error, data) {
-                if(error) return callback(error)
-                callback(
-                    false,
-                    taskGraders.quiz.gradeAnswer(data, args.answer, args.versions, args.score_settings)
-                );
-            })
-        },
-
-        grade2: function(args: {task: TaskArg, answer: string, versions: any, score_settings: ScoreSettings}, callback: GenericCallback) {
-            graderData.read(args.task, function(error, data) {
-                if(error) return callback(error);
-
-                callback(
-                    false,
-                  taskGraders.quiz2.gradeAnswer(data, args.answer, args.versions, args.score_settings)
-                );
-            })
-        }
+        grade: makeGradeAnswer(taskGraders.quiz.gradeAnswer),
+        grade2: makeGradeAnswer(taskGraders.quiz2.gradeAnswer)
     }
 }
