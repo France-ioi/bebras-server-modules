@@ -44,6 +44,7 @@ export interface TaskTokenPayload {
   sHintsRequested: string;
   idTask: string;
   idUser: string;
+  idAttempt: string;
   platformName: string;
 }
 
