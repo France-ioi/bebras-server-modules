@@ -128,15 +128,16 @@ export default {
                         try {
                             await obj!.gradeAnswer(args, task_data, (error, data: any) => {
                                 if (error) return executionCallback(error);
+                                const tokenData: any = {
+                                    score: data.score.toString(),
+                                    sAnswer: null
+                                };
                                 for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer', 'idItemLocal', 'idAttempt']) {
                                     data[key] = args.answer.payload[key];
+                                    tokenData[key] = args.answer.payload[key];
                                 }
-                                data.date = algoreaFormatDate(new Date)
-                                const tokenData = {
-                                    ...data,
-                                    score: data.score.toString()
-                                };
-                                data.token = jwt.sign(tokenData, config.grader_key, { algorithm: 'RS512' })
+                                tokenData.date = algoreaFormatDate(new Date)
+                                data.token = jwt.sign(tokenData, config.grader_key, { algorithm: 'RS512', noTimestamp: true })
                                 executionCallback(false, data)
                             });
                         } catch (ex) {

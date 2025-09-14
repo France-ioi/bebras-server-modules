@@ -29,19 +29,20 @@ function makeGradeAnswer(gradeFunc: (data: string, answer: string, versions: str
             const scoreToken = {
                 score: gradingResult.score.toString(),
                 idUser: args.task.payload.idUser,
+                idItem: null,
                 idTask: args.task.payload.idTask,
                 itemUrl: args.task.payload.itemUrl,
                 idUserAnswer: args.answer_token.payload.idUserAnswer,
                 idItemLocal: args.task.payload.idItemLocal,
                 idAttempt: args.task.payload.idAttempt,
-                platformName: args.task.payload.platformName,
-                randomSeed: args.task.payload.randomSeed,
+                sAnswer: null,
                 date: algoreaFormatDate(new Date())
             };
             const result = {
                 ...gradingResult,
-                token: jwt.sign(scoreToken, config.grader_key, { algorithm: 'RS512' })
+                token: jwt.sign(scoreToken, config.grader_key, { algorithm: 'RS512', noTimestamp: true })
             };
+
             callback(false, result);
         })
     }
