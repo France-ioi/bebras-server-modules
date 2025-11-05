@@ -1,0 +1,184 @@
+import jwt from 'jsonwebtoken';
+import path from 'path';
+import fs from 'fs';
+import config from '../config/tasks';
+import data_repo from '../repositories/task_data';
+import tokens_api from '../libs/tokens_api';
+import {GenericCallback, TaskArg} from "../types";
+
+//TODO: watch tasks dir and reset modules cache?
+/*
+function requireUncached(module){
+    delete require.cache[require.resolve(module)]
+    return require(module)
+}
+*/
+const TASK_DATA_KEY = '___TASK_DATA'
+
+//TODO: move to repositories
+const file = path.resolve(process.cwd(), 'tasks.json')
+const data = fs.existsSync(file) ? require(file) : {}
+
+
+function getFile(task_id: string) {
+    if(!(task_id in data)) {
+        return null;
+    }
+    return path.resolve(process.cwd(), data[task_id])
+}
+
+
+function loadTask(task_id: string, method: string, callback: GenericCallback) {
+    const file = getFile(task_id)
+    if(!file) {
+        return callback(new Error('Task not found'))
+    }
+
+    function obj() {
+        const obj = require(file!)
+        if(method in obj) {
+            return callback(false, obj)
+        }
+        return callback(new Error(`Task does not support ${method} method`))
+    }
+
+    const id = require.resolve(file)
+    if(require.cache[id]) {
+        return obj()
+    }
+
+    fs.access(file, (fs.constants || fs).R_OK, (error) => {
+        if(error) {
+            return callback(new Error('Task file not found'))
+        }
+        obj()
+    })
+}
+
+function loadTaskData(obj: any, args: {task: TaskArg}, callback: GenericCallback) {
+    if(!obj.config || !obj.config.cache_task_data) {
+        return obj.taskData(args, callback)
+    }
+    data_repo.read(args.task, TASK_DATA_KEY, (error, data) => {
+        if(!error) return callback(null, data)
+        obj.taskData(args, (error: Error|null, data: any) => {
+            if(error) return callback(error)
+            data_repo.write(args.task, TASK_DATA_KEY, data, 0, (error) => {
+                callback(error, data)
+            })
+        })
+    })
+}
+
+function algoreaFormatDate(date: Date) {
+    const d = date.getDate()
+    const m = date.getMonth() + 1
+    // Algorea TokenParser format: d-m-Y
+    return (d < 10 ? '0' + d : d) + '-' + (m < 10 ? '0' + m : m) + '-' + date.getFullYear()
+}
+
+
+export default {
+
+    path: '/tasks',
+
+    validators: {
+
+        task: function(v: string, callback: GenericCallback) {
+            tokens_api.verify(v, (error) => {
+                if(error) return callback(error)
+                tokens_api.decodeTask(v, callback)
+            })
+        },
+
+        answer: function(v: string, callback: GenericCallback) {
+            tokens_api.verify(v, (error) => {
+                if(error) return callback(error)
+                tokens_api.decodeAnswer(v, callback)
+            })
+        },
+
+        min_score: function(v: any, callback: GenericCallback) {
+            const valid = v == parseInt(v, 10) && v >= 0
+            callback(!valid, v)
+        },
+
+        max_score: function(v: any, callback: GenericCallback) {
+            const valid = v == parseInt(v, 10) && v >= 0
+            callback(!valid, v)
+        },
+
+        no_score: function(v: any, callback: GenericCallback) {
+            const valid = v == parseInt(v, 10) && v >= 0
+            callback(!valid, v)
+        },
+
+        request: function(v: string, callback: GenericCallback) {
+            callback(null, v);
+        },
+    },
+    params: {
+        taskData: ['task'],
+        taskHintData: ['task'],
+        gradeAnswer: ['task', 'answer', 'min_score', 'max_score', 'no_score'],
+        requestHint: ['task', 'request'],
+    },
+    actions: {
+        taskData: function(args: {task: TaskArg}, callback: GenericCallback) {
+            loadTask(args.task.id, 'taskData', (error, obj) => {
+                if(error) return callback(error)
+                loadTaskData(obj, args, function (error, result) {
+                    if(error) return callback(error)
+
+                    callback(null, result.publicData ? result.publicData : result);
+                });
+            })
+        },
+        taskHintData: function(args: {task: TaskArg}, callback: GenericCallback) {
+            loadTask(args.task.id, 'taskHintData', (error, obj) => {
+                if(error) return callback(error)
+                loadTaskData(obj, args, (error, task_data) => {
+                    if(error) return callback(error)
+                    try {
+                        obj.taskHintData(args, task_data, callback)
+                    } catch (ex) {
+                        return callback(ex);
+                    }
+                })
+            })
+        },
+        gradeAnswer: function(args: {task: TaskArg, answer: {payload: any}}, callback: GenericCallback) {
+            loadTask(args.task.id, 'gradeAnswer', (error, obj) => {
+                if(error) return callback(error)
+                loadTaskData(obj, args, (error, task_data) => {
+                    if(error) return callback(error)
+                    try {
+                        obj.gradeAnswer(args, task_data, (error: Error|null, data: any) => {
+                            if(error) return callback(error);
+                            for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer']) {
+                                data[key] = args.answer.payload[key];
+                            }
+                            data.date = algoreaFormatDate(new Date)
+                            data.token = jwt.sign(data, config.grader_key, {algorithm: 'RS512'})
+                            callback(false, data)
+                        })
+                    } catch (ex) {
+                        return callback(ex);
+                    }
+                })
+            })
+        },
+        requestHint: function(args: {task: TaskArg}, callback: GenericCallback) {
+            loadTask(args.task.id, 'taskData', (error, obj) => {
+                if(error) return callback(error)
+                /* Task's requestHint is expected to return the askedHint*/
+                obj.requestHint(args, (error: Error|null, askedHint: any) => {
+                    if(error) return callback(error);
+                    const payload = {askedHint: askedHint, date: algoreaFormatDate(new Date)};
+                    const hintToken = jwt.sign(payload, config.grader_key, {algorithm: 'RS512'});
+                    callback(null, {hintToken: hintToken});
+                });
+            })
+       },
+    }
+}
