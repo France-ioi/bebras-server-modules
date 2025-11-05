@@ -108,7 +108,7 @@ function verifyBody(body: any, handler: any, callback: any) {
                     if(error) {
                         return callback(error)
                     }
-                    args = _.extend(args, params)
+                    args = _.extend(args, body, params)
                     callback(false, body.action, args)
                 })
 /*

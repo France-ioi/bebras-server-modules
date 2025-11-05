@@ -26,7 +26,11 @@ export default {
         s3.putObject(params, callback);
     },
 
-    remove(file: string, callback: Callback): void {
+    remove(file: string|null, callback: Callback): void {
+        if (null === file) {
+            return;
+        }
+
         const params: AWS.S3.DeleteObjectRequest = {
             Key: file,
             Bucket: conf.s3.bucket!,

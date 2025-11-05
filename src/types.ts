@@ -35,12 +35,18 @@ export interface TaskArg {
   id: string;
   random_seed: string;
   hints_requested: number;
+  payload: TaskTokenPayload;
 }
 
 export interface TaskTokenPayload {
   itemUrl: string;
   randomSeed: string;
   sHintsRequested: string;
+  idTask: string;
+  idUser: string;
+  idItemLocal: string;
+  idAttempt: string;
+  platformName: string;
 }
 
 export interface AnswerTokenPayload extends TaskTokenPayload {
@@ -54,4 +60,34 @@ export interface ScoreSettings {
   noScore: number;
   questions_info: any;
   score_calculation: any;
+}
+
+export interface AiGenerationRow {
+  id: string;
+  task_id: string;
+  user_id: string;
+  platform_id: string;
+  generations: number;
+  last_generation_date: string;
+  last_generation_id: string;
+}
+
+export interface TaskObject {
+  config: TaskConfig;
+  loadGraderData: (data: any) => void,
+  taskHintData: (args: {task: TaskArg}, task_data: any, callback: GenericCallback) => Promise<void>,
+  gradeAnswer: (args: {task: TaskArg, answer: {payload: any}}, task_data: any, callback: GenericCallback) => Promise<void>,
+  requestHint: (args: {task: TaskArg}, callback: GenericCallback) => Promise<void>,
+}
+
+export interface TaskConfig {
+  template?: boolean;
+  cache_task_data: boolean;
+  ai_quota: AIQuotaConfig;
+}
+
+export interface AIQuotaConfig {
+  free_tries: number;
+  wait_time: number;
+  exponential_factor: number;
 }

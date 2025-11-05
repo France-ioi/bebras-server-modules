@@ -31,6 +31,30 @@ const db = {
             );
         });
     },
+
+    queryAsync<T>(sql: string, values: any[]): Promise<T> {
+      return new Promise((resolve, reject) => {
+        pool.getConnection((error: mysql.MysqlError | null, connection: PoolConnection | undefined) => {
+          if (error) {
+            reject(error);
+          }
+
+          connection!.query(
+            sql,
+            values,
+            (error: mysql.MysqlError | null, results: any, fields: FieldInfo[] | undefined) => {
+              connection!.release();
+
+              if (error) {
+                reject(error);
+              } else {
+                resolve(results);
+              }
+            }
+          );
+        });
+      })
+    },
 };
 
 export default db;

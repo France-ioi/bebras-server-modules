@@ -1,10 +1,10 @@
 import jwt from 'jsonwebtoken';
-import path from 'path';
-import fs from 'fs';
 import config from '../config/tasks';
 import data_repo from '../repositories/task_data';
 import tokens_api from '../libs/tokens_api';
 import {GenericCallback, TaskArg} from "../types";
+import {loadTask} from "../libs/tasks";
+import {longPollingHandler} from "../libs/long_polling";
 
 //TODO: watch tasks dir and reset modules cache?
 /*
@@ -15,45 +15,6 @@ function requireUncached(module){
 */
 const TASK_DATA_KEY = '___TASK_DATA'
 
-//TODO: move to repositories
-const file = path.resolve(process.cwd(), 'tasks.json')
-const data = fs.existsSync(file) ? require(file) : {}
-
-
-function getFile(task_id: string) {
-    if(!(task_id in data)) {
-        return null;
-    }
-    return path.resolve(process.cwd(), data[task_id])
-}
-
-
-function loadTask(task_id: string, method: string, callback: GenericCallback) {
-    const file = getFile(task_id)
-    if(!file) {
-        return callback(new Error('Task not found'))
-    }
-
-    function obj() {
-        const obj = require(file!)
-        if(method in obj) {
-            return callback(false, obj)
-        }
-        return callback(new Error(`Task does not support ${method} method`))
-    }
-
-    const id = require.resolve(file)
-    if(require.cache[id]) {
-        return obj()
-    }
-
-    fs.access(file, (fs.constants || fs).R_OK, (error) => {
-        if(error) {
-            return callback(new Error('Task file not found'))
-        }
-        obj()
-    })
-}
 
 async function loadTaskData(obj: any, args: {task: TaskArg}, callback: GenericCallback) {
     if(!obj.config || !obj.config.cache_task_data) {
@@ -146,35 +107,43 @@ export default {
         },
         taskHintData: function(args: {task: TaskArg}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskHintData', (error, obj) => {
-                if(error) return callback(error)
+                if (error) return callback(error)
                 loadTaskData(obj, args, async (error, task_data) => {
                     if(error) return callback(error)
                     try {
-                        await obj.taskHintData(args, task_data, callback)
+                        await obj!.taskHintData(args, task_data, callback)
                     } catch (ex) {
                         return callback(ex);
                     }
                 })
             })
         },
-        gradeAnswer: function(args: {task: TaskArg, answer: {payload: any}}, callback: GenericCallback) {
+        gradeAnswer: function (args: {task: TaskArg, answer: {payload: any}, long_polling_id: string}, callback: GenericCallback) {
             loadTask(args.task.id, 'gradeAnswer', (error, obj) => {
-                if(error) return callback(error)
+                if (error) return callback(error)
                 loadTaskData(obj, args, async (error, task_data) => {
-                    if(error) return callback(error)
-                    try {
-                        await obj.gradeAnswer(args, task_data, (error: Error|null, data: any) => {
-                            if(error) return callback(error);
-                            for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer']) {
-                                data[key] = args.answer.payload[key];
-                            }
-                            data.date = algoreaFormatDate(new Date)
-                            data.token = jwt.sign(data, config.grader_key, {algorithm: 'RS512'})
-                            callback(false, data)
-                        })
-                    } catch (ex) {
-                        return callback(ex);
-                    }
+                    if (error) return callback(error)
+
+                    longPollingHandler.backgroundExecute(async (executionCallback: GenericCallback) => {
+                        try {
+                            await obj!.gradeAnswer(args, task_data, (error, data: any) => {
+                                if (error) return executionCallback(error);
+                                const tokenData: any = {
+                                    score: data.score.toString(),
+                                    sAnswer: null
+                                };
+                                for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer', 'idItemLocal', 'idAttempt']) {
+                                    data[key] = args.answer.payload[key];
+                                    tokenData[key] = args.answer.payload[key];
+                                }
+                                tokenData.date = algoreaFormatDate(new Date)
+                                data.token = jwt.sign(tokenData, config.grader_key, { algorithm: 'RS512', noTimestamp: true })
+                                executionCallback(false, data)
+                            });
+                        } catch (ex) {
+                            return executionCallback(ex);
+                        }
+                    }, callback, 20*1000, args.long_polling_id);
                 })
             })
         },
@@ -183,7 +152,7 @@ export default {
                 if(error) return callback(error)
                 /* Task's requestHint is expected to return the askedHint*/
                 try {
-                    await obj.requestHint(args, (error: Error|null, askedHint: any) => {
+                    await obj!.requestHint(args, (error, askedHint: any) => {
                         if(error) return callback(error);
                         const payload = {askedHint: askedHint, date: algoreaFormatDate(new Date)};
                         const hintToken = jwt.sign(payload, config.grader_key, {algorithm: 'RS512'});

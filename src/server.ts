@@ -1,3 +1,5 @@
+/// <reference path="./types/shim.d.ts" />
+
 import 'dotenv/config'
 import params from './libs/params';
 import express, { Express } from 'express';

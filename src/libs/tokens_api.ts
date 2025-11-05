@@ -3,7 +3,8 @@ import config from '../config';
 import jwt from 'jsonwebtoken';
 import qs from 'querystring';
 import Url from 'url';
-import {AnswerTokenPayload, GenericCallback, TaskTokenPayload} from "../types";
+import {AnswerTokenPayload, GenericCallback, PlatformRow, TaskTokenPayload} from "../types";
+import platforms from "../repositories/platforms";
 
 function getTaskParams(itemUrl: string) {
     return qs.parse(Url.parse(itemUrl).query!)
@@ -41,7 +42,8 @@ export default {
             random_seed,
             hints_requested: payload.sHintsRequested,
             params,
-            payload
+            payload,
+            token,
             /* Is there a good reason not to pass the full token? */
         })
     },
@@ -96,5 +98,32 @@ export default {
         }).catch((error) => {
             callback(error)
         })
+    },
+    extractUserAndPlatform: async (tokenPayload: {idUser: string; platformName: string}) => {
+        let {idUser: userId, platformName} = tokenPayload;
+        if (!userId || !platformName) {
+            if (config.server.dev_mode) {
+                userId = config.server.dev_user_id!;
+                platformName = config.server.dev_platform_name!;
+            } else {
+                throw new Error(`User ID or platform name are mandatory`);
+            }
+        }
+
+        const platform = await new Promise<PlatformRow|undefined>((resolve, reject) => {
+            platforms.getByName(platformName, (error: any, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            });
+        })
+
+        if (!platform) {
+            throw new Error(`Platform ${platform} not found`);
+        }
+
+        return {userId, platform};
     }
 }
