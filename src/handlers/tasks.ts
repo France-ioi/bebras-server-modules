@@ -55,18 +55,28 @@ function loadTask(task_id: string, method: string, callback: GenericCallback) {
     })
 }
 
-function loadTaskData(obj: any, args: {task: TaskArg}, callback: GenericCallback) {
+async function loadTaskData(obj: any, args: {task: TaskArg}, callback: GenericCallback) {
     if(!obj.config || !obj.config.cache_task_data) {
-        return obj.taskData(args, callback)
+        try {
+            await obj.taskData(args, callback)
+        } catch (ex) {
+            callback(ex);
+        }
+        return;
     }
-    data_repo.read(args.task, TASK_DATA_KEY, (error, data) => {
+
+    data_repo.read(args.task, TASK_DATA_KEY, async (error, data) => {
         if(!error) return callback(null, data)
-        obj.taskData(args, (error: Error|null, data: any) => {
-            if(error) return callback(error)
-            data_repo.write(args.task, TASK_DATA_KEY, data, 0, (error) => {
-                callback(error, data)
-            })
-        })
+        try {
+            await obj.taskData(args, (error: Error|null, data: any) => {
+                if (error) return callback(error)
+                data_repo.write(args.task, TASK_DATA_KEY, data, 0, (error) => {
+                    callback(error, data)
+                })
+            });
+        } catch (ex) {
+            callback(ex);
+        }
     })
 }
 
@@ -137,10 +147,10 @@ export default {
         taskHintData: function(args: {task: TaskArg}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskHintData', (error, obj) => {
                 if(error) return callback(error)
-                loadTaskData(obj, args, (error, task_data) => {
+                loadTaskData(obj, args, async (error, task_data) => {
                     if(error) return callback(error)
                     try {
-                        obj.taskHintData(args, task_data, callback)
+                        await obj.taskHintData(args, task_data, callback)
                     } catch (ex) {
                         return callback(ex);
                     }
@@ -150,10 +160,10 @@ export default {
         gradeAnswer: function(args: {task: TaskArg, answer: {payload: any}}, callback: GenericCallback) {
             loadTask(args.task.id, 'gradeAnswer', (error, obj) => {
                 if(error) return callback(error)
-                loadTaskData(obj, args, (error, task_data) => {
+                loadTaskData(obj, args, async (error, task_data) => {
                     if(error) return callback(error)
                     try {
-                        obj.gradeAnswer(args, task_data, (error: Error|null, data: any) => {
+                        await obj.gradeAnswer(args, task_data, (error: Error|null, data: any) => {
                             if(error) return callback(error);
                             for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer']) {
                                 data[key] = args.answer.payload[key];
@@ -169,15 +179,19 @@ export default {
             })
         },
         requestHint: function(args: {task: TaskArg}, callback: GenericCallback) {
-            loadTask(args.task.id, 'taskData', (error, obj) => {
+            loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if(error) return callback(error)
                 /* Task's requestHint is expected to return the askedHint*/
-                obj.requestHint(args, (error: Error|null, askedHint: any) => {
-                    if(error) return callback(error);
-                    const payload = {askedHint: askedHint, date: algoreaFormatDate(new Date)};
-                    const hintToken = jwt.sign(payload, config.grader_key, {algorithm: 'RS512'});
-                    callback(null, {hintToken: hintToken});
-                });
+                try {
+                    await obj.requestHint(args, (error: Error|null, askedHint: any) => {
+                        if(error) return callback(error);
+                        const payload = {askedHint: askedHint, date: algoreaFormatDate(new Date)};
+                        const hintToken = jwt.sign(payload, config.grader_key, {algorithm: 'RS512'});
+                        callback(null, {hintToken: hintToken});
+                    });
+                } catch (ex) {
+                    callback(ex);
+                }
             })
        },
     }
