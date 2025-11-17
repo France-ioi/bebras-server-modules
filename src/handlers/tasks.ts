@@ -129,7 +129,7 @@ export default {
                             await obj!.gradeAnswer(args, task_data, (error, data: any) => {
                                 if (error) return executionCallback(error);
                                 const tokenData: any = {
-                                    score: data.score.toString(),
+                                    score: (data.score ?? 0).toString(),
                                     sAnswer: null
                                 };
                                 for (let key of ['idUser', 'idItem', 'itemUrl', 'idUserAnswer', 'idItemLocal', 'idAttempt']) {
