@@ -57,7 +57,7 @@ export function loadTask(task_id: string, method: string, callback: GenericCallb
       if (result?.config?.template) {
         callback(new Error('This task is a template, it cannot be loaded as a raw task'))
       } else {
-        callback(result);
+        callback(null, result);
       }
     });
   }
