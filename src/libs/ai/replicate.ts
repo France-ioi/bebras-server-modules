@@ -1,7 +1,7 @@
 import Replicate from "replicate";
 import fetch from 'isomorphic-fetch';
 
-export async function replicateGenerateImageFromPrompt(prompt: string, model: `${string}/${string}`|`${string}/${string}:${string}`, size: string = '512x512'): Promise<string|undefined> {
+export async function replicateGenerateImageFromPrompt(prompt: string, model: string, size: string = '512x512'): Promise<string|undefined> {
   const client = new Replicate({
     auth: process.env['REPLICATE_API_TOKEN'],
   });
@@ -15,7 +15,7 @@ export async function replicateGenerateImageFromPrompt(prompt: string, model: `$
     const input = {
       prompt,
       output_format: 'jpg',
-      aspect_ratio: 'custom',
+      aspect_ratio: width === height ? '1:1' : 'custom',
       width,
       height,
       megapixels,
@@ -25,19 +25,27 @@ export async function replicateGenerateImageFromPrompt(prompt: string, model: `$
       model = 'black-forest-labs/flux-schnell';
     }
 
-    const output = await client.run(model, { input });
-    for (const item of Object.values(output)) {
-      const response = await fetch(item.url().href);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`);
-      }
+    const output = await client.run(model as `${string}/${string}`|`${string}/${string}:${string}`, {input});
+    const url = extractResponseUrl(output);
+    const response = await fetch(url.href);
 
-      // @ts-ignore
-      const buffer = await response.buffer();
-
-      return new Buffer(buffer).toString('base64');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
+
+    // @ts-ignore
+    const buffer = await response.buffer();
+
+    return new Buffer(buffer).toString('base64');
   } catch (e: any) {
     throw e;
   }
+}
+
+function extractResponseUrl(response: any) {
+  if (response.url) {
+    return response.url();
+  }
+
+  return response[0].url();
 }

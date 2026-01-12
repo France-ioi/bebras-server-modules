@@ -30,11 +30,11 @@ const availableModelProviders = {
 
 class AIGenerator {
   public extractModelInfo(model: string): {provider: string, model: string} {
-    const [provider, providerModel] = model.split('/');
+    const [provider, ...providerModel] = model.split('/');
 
     return {
       provider,
-      model: providerModel,
+      model: providerModel.join('/'),
     };
   }
   public async generateText(prompt: string, model: string) {
