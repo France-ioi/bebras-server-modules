@@ -1,21 +1,31 @@
 import Replicate from "replicate";
 import fetch from 'isomorphic-fetch';
 
-export async function replicateGenerateImageFromPrompt(prompt: string, model: string, size: string = '512x512'): Promise<string|undefined> {
+export async function replicateGenerateImageFromPrompt(prompt: string, model: `${string}/${string}`|`${string}/${string}:${string}`, size: string = '512x512'): Promise<string|undefined> {
   const client = new Replicate({
     auth: process.env['REPLICATE_API_TOKEN'],
   });
 
   console.log("Generating image from Replicate prompt", prompt, process.env['REPLICATE_API_TOKEN']);
 
+  const [width, height] = size.split('x').map(Number); // For Flux 2 Dev
+  const megapixels = width*height <= 512*512 ? '0.25' : '1'; // For Flux Schnell
+
   try {
     const input = {
       prompt,
       output_format: 'jpg',
-      megapixels: "0.25",
+      aspect_ratio: 'custom',
+      width,
+      height,
+      megapixels,
     };
 
-    const output = await client.run("black-forest-labs/flux-schnell", { input });
+    if (!model) {
+      model = 'black-forest-labs/flux-schnell';
+    }
+
+    const output = await client.run(model, { input });
     for (const item of Object.values(output)) {
       const response = await fetch(item.url().href);
       if (!response.ok) {
