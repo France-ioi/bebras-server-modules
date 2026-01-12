@@ -12,18 +12,18 @@ export async function replicateGenerateImageFromPrompt(prompt: string, model: st
   const megapixels = width*height <= 512*512 ? '0.25' : '1'; // For Flux Schnell
 
   try {
+    if (!model) {
+      model = 'black-forest-labs/flux-schnell';
+    }
+
     const input = {
       prompt,
       output_format: 'jpg',
-      aspect_ratio: width === height ? '1:1' : 'custom',
+      aspect_ratio: 'black-forest-labs/flux-schnell' === model ? '1:1' : 'custom', // Flux-schnell does not support "custom"
       width,
       height,
       megapixels,
     };
-
-    if (!model) {
-      model = 'black-forest-labs/flux-schnell';
-    }
 
     const output = await client.run(model as `${string}/${string}`|`${string}/${string}:${string}`, {input});
     const url = extractResponseUrl(output);
