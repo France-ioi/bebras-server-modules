@@ -12,7 +12,7 @@ export async function replicateGenerateImageFromPrompt(prompt: string, model: st
   const megapixels = width*height <= 512*512 ? '0.25' : '1'; // For Flux Schnell
 
   try {
-    if (!model) {
+    if (!model || model === 'flux-schnell') {
       model = 'black-forest-labs/flux-schnell';
     }
 
