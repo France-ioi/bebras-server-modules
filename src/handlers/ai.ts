@@ -35,12 +35,27 @@ export default {
         },
     },
     params: {
-        generateText: ['task', 'prompt', 'model', 'free'],
-        generateImage: ['task', 'prompt', 'model', 'size', 'free'],
+        requestNewAiUsage: ['task'],
+        generateText: ['task', 'prompt', 'model'],
+        generateImage: ['task', 'prompt', 'model', 'size'],
         getEmbedding: ['task', 'prompt', 'model'],
     },
     actions: {
-        generateText: function(args: {task: TaskArg, prompt: string, model: string, free: boolean}, callback: GenericCallback) {
+        requestNewAiUsage: function(args: {task: TaskArg}, callback: GenericCallback) {
+            loadTask(args.task.id, 'taskData', async (error, obj) => {
+                if (error) return callback(error);
+
+                try {
+                    await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota);
+
+                    callback(null, {success: true});
+                } catch (e) {
+                    console.error(e);
+                    callback(e);
+                }
+            });
+        },
+        generateText: function(args: {task: TaskArg, prompt: string, model: string}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if (error) return callback(error);
 
@@ -51,10 +66,6 @@ export default {
                     if (result) {
                         callback(null, result);
                         return;
-                    }
-
-                    if (!args.free) {
-                        await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, generationId);
                     }
 
                     if (result) {
@@ -72,9 +83,9 @@ export default {
                     console.error(e);
                     callback(e);
                 }
-            })
+            });
         },
-        generateImage: function(args: {task: TaskArg, prompt: string, model: string, size: string, free: boolean}, callback: GenericCallback) {
+        generateImage: function(args: {task: TaskArg, prompt: string, model: string, size: string}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if(error) return callback(error)
 
@@ -87,10 +98,6 @@ export default {
                     if (result) {
                         callback(null, result);
                         return;
-                    }
-
-                    if (!args.free) {
-                        await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota, generationId);
                     }
 
                     let image = await aiGenerator.generateImage(args.prompt, args.model, args.size);
@@ -128,7 +135,7 @@ export default {
                     console.error(e);
                     callback(e);
                 }
-            })
+            });
         },
         getEmbedding: async function(args: {task: TaskArg, prompt: string, model: string}, callback: GenericCallback) {
             try {

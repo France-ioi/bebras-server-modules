@@ -1,7 +1,5 @@
-import config from "../config";
 import db from "./db";
-import {AIQuotaConfig, PlatformRow, AiGenerationRow} from "../types";
-import platforms from "../repositories/platforms";
+import {AIQuotaConfig, AiGenerationRow} from "../types";
 import tokens_api from "./tokens_api";
 
 class ExceededQuotaError extends Error {
@@ -13,7 +11,7 @@ class ExceededQuotaError extends Error {
   }
 }
 
-export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: string, platformName: string}, aiQuotaConfig: AIQuotaConfig, generationId: string): Promise<void> {
+export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: string, platformName: string}, aiQuotaConfig: AIQuotaConfig): Promise<void> {
   let {userId, platform} = await tokens_api.extractUserAndPlatform(tokenPayload);
 
   const sql = `SELECT * FROM ai_generations WHERE \`task_id\` = ? AND \`user_id\` = ? AND \`platform_id\` = ? LIMIT 1`
@@ -24,7 +22,7 @@ export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: s
             (`task_id`, `user_id`, `platform_id`, `generations`, `last_generation_date`, `last_generation_id`)\
             VALUES\
             (?, ?, ?, 1, NOW(), ?)';
-    const values = [taskId, userId, platform.id, generationId];
+    const values = [taskId, userId, platform.id, 0];
 
     await db.queryAsync(sql, values);
   } else {
@@ -34,7 +32,7 @@ export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: s
 
     const sql = 'UPDATE `ai_generations` SET generations = generations + 1, last_generation_date = NOW(), last_generation_id = ?\
             WHERE id = ?';
-    const values = [generationId, aiGenerationRow.id];
+    const values = [0, aiGenerationRow.id];
 
     await db.queryAsync(sql, values);
   }
