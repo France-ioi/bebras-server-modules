@@ -3,7 +3,7 @@ import {openAIGenerateTextFromPrompt, getOpenAIEmbedding} from "./openai";
 import {replicateGenerateImageFromPrompt} from "./replicate";
 import {geminiGenerateImageFromPrompt, geminiGenerateTextFromPrompt} from "./gemini";
 
-export type TextGenerator = (prompt: string, model: string) => Promise<string|undefined>;
+export type TextGenerator = (prompt: string, model: string, jsonSchema: object|null) => Promise<string|undefined>;
 export type ImageGenerator = (prompt: string, model: string, size: string) => Promise<string|undefined>;
 export type EmbeddingGenerator = (input: string, model: string) => Promise<number[]>;
 
@@ -37,7 +37,7 @@ class AIGenerator {
       model: providerModel.join('/'),
     };
   }
-  public async generateText(prompt: string, model: string) {
+  public async generateText(prompt: string, model: string, jsonSchema: object|null = null) {
     const modelInfo = this.extractModelInfo(model);
     if (!(modelInfo.provider in availableModelProviders.text)) {
       throw new Error(`This provider is not supported for text generation: ${modelInfo.provider}.`);
@@ -45,7 +45,7 @@ class AIGenerator {
 
     const generator = availableModelProviders.text[modelInfo.provider];
 
-    return await generator(prompt, modelInfo.model);
+    return await generator(prompt, modelInfo.model, jsonSchema);
   }
 
   public async getEmbedding(input: string, model: string) {
