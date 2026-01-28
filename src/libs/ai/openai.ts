@@ -14,11 +14,11 @@ export async function getOpenAIEmbedding(input: string, model: string): Promise<
   return embedding.data[0].embedding;
 }
 
-export async function openAIGenerateTextFromPrompt(input: string, model: string, jsonSchema: object|null): Promise<string> {
+export async function openAIGenerateTextFromPrompt(input: string, model: string, jsonSchema: object|null, systemInstructions: string|null): Promise<string> {
   const response = await client.responses.create({
     model,
     input: [
-      // { role: "system", content: "You are a helpful math tutor. Guide the user through the solution step by step." },
+      ...(systemInstructions ? [{ role: "system" as const, content: systemInstructions}] : []),
       { role: "user", content: input }
     ],
     ...(jsonSchema ? {

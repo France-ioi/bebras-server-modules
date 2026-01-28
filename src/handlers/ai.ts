@@ -55,7 +55,7 @@ export default {
                 }
             });
         },
-        generateText: function(args: {task: TaskArg, prompt: string, model: string, jsonSchema?: object}, callback: GenericCallback) {
+        generateText: function(args: {task: TaskArg, prompt: string, model: string, jsonSchema?: object, systemInstructions?: string}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if (error) return callback(error);
 
@@ -64,6 +64,7 @@ export default {
                         prompt: args.prompt,
                         model: args.model,
                         jsonSchema: args.jsonSchema,
+                        systemInstructions: args.systemInstructions,
                     }));
 
                     const result = await fetchGenerationIdFromCache(generationId);
@@ -77,7 +78,7 @@ export default {
                         return;
                     }
 
-                    const text = await aiGenerator.generateText(args.prompt, args.model, args.jsonSchema);
+                    const text = await aiGenerator.generateText(args.prompt, args.model, args.jsonSchema, args.systemInstructions);
                     if (text) {
                         await storeAIUsage(generationId, text);
                     }

@@ -2,7 +2,7 @@ import {GoogleGenAI} from "@google/genai";
 
 const ai = new GoogleGenAI({});
 
-export async function geminiGenerateTextFromPrompt(input: string, model: string, jsonSchema: object|null): Promise<string> {
+export async function geminiGenerateTextFromPrompt(input: string, model: string, jsonSchema: object|null, systemInstructions: string|null): Promise<string> {
   const response = await ai.models.generateContent({
     model,
     contents: input,
@@ -10,7 +10,12 @@ export async function geminiGenerateTextFromPrompt(input: string, model: string,
       ...(jsonSchema ? {
         responseJsonSchema: jsonSchema,
       } : {}),
-    }
+      ...(systemInstructions ? {
+        systemInstruction: [
+          systemInstructions,
+        ],
+      } : {}),
+    },
   });
 
   if (!response.text) {
