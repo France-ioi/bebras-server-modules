@@ -14,6 +14,9 @@ class LongPollingHandler {
     const eventName = `execution-${submissionId}`;
     console.log('background exec', {execution, callback, timeout, longPollingId});
 
+    // make sure the listener is registered *before* execution
+    const eventPromise = this.waitForEvent(eventName, timeout)
+
     if (!longPollingId) {
       console.log('start exec');
       execution((error, result) => {
@@ -24,18 +27,17 @@ class LongPollingHandler {
     }
 
     console.log('start wait for event');
-    this.waitForEvent(eventName, timeout)
-      .then(({longPollingResult, result}) => {
-        console.log('end wait for event', {longPollingResult, result})
-        if (LongPollingHandlerResult.Event === longPollingResult) {
-          callback(result.error, result.result);
-        } else {
-          callback(null, {
-            longPolling: true,
-            longPollingFollowUpId: submissionId,
-          })
-        }
-      });
+    eventPromise.then(({longPollingResult, result}) => {
+      console.log('end wait for event', {longPollingResult, result})
+      if (LongPollingHandlerResult.Event === longPollingResult) {
+        callback(result.error, result.result);
+      } else {
+        callback(null, {
+          longPolling: true,
+          longPollingFollowUpId: submissionId,
+        })
+      }
+    });
   }
 
   waitForEvent(eventName: string, timeout: number): Promise<{longPollingResult: LongPollingHandlerResult, result?: any}> {
