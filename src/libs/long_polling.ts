@@ -6,69 +6,95 @@ export enum LongPollingHandlerResult {
   Timeout = 'timeout',
 }
 
+interface SubmissionData {
+  pending?: boolean;
+  result?: {error: unknown, result: unknown};
+  listener?: {fn: Function, timeoutId: NodeJS.Timeout};
+}
+
 class LongPollingHandler {
-  private listeners: {[eventName: string]: {fn: Function, timeoutId: NodeJS.Timeout}} = {};
+  private submissionData: {[submissionId: string]: SubmissionData} = {};
 
   backgroundExecute(execution: (callback: GenericCallback) => void, callback: GenericCallback, timeout: number, longPollingId: string): void {
     const submissionId = longPollingId ?? generateGenerationIdFromPrompt(String(Math.random()));
-    const eventName = `execution-${submissionId}`;
-    console.log('background exec', {execution, callback, timeout, longPollingId});
 
     // make sure the listener is registered *before* execution
-    const eventPromise = this.waitForEvent(eventName, timeout)
+    const eventPromise = this.waitForEvent(submissionId, timeout);
 
     if (!longPollingId) {
-      console.log('start exec');
+      this.submissionData[submissionId] ||= {};
+      this.submissionData[submissionId].pending = true;
+
       execution((error, result) => {
-        this.fireEvent(eventName, {error, result});
-        console.log('send callback result');
-        // callback(error, result);
+        this.fireEvent(submissionId, {error, result});
       });
     }
 
-    console.log('start wait for event');
+    if (this.submissionData[submissionId]?.result) {
+      const result = this.submissionData[submissionId].result;
+      callback(result.error, result.result);
+
+      return;
+    }
+
+    if (!this.submissionData[submissionId]?.pending) {
+      callback(new Error("This submission is not pending and the result is not available anymore."));
+
+      return;
+    }
+
     eventPromise.then(({longPollingResult, result}) => {
-      console.log('end wait for event', {longPollingResult, result})
       if (LongPollingHandlerResult.Event === longPollingResult) {
         callback(result.error, result.result);
       } else {
         callback(null, {
           longPolling: true,
           longPollingFollowUpId: submissionId,
-        })
+        });
       }
     });
   }
 
-  waitForEvent(eventName: string, timeout: number): Promise<{longPollingResult: LongPollingHandlerResult, result?: any}> {
+  waitForEvent(submissionId: string, timeout: number): Promise<{longPollingResult: LongPollingHandlerResult, result?: any}> {
     return new Promise(resolve => {
       const timeoutId = setTimeout(() => {
         resolve({longPollingResult: LongPollingHandlerResult.Timeout});
       }, timeout);
 
-      this.register(eventName, timeoutId, resolve);
+      this.register(submissionId, timeoutId, resolve);
     });
   }
 
-  fireEvent(eventName: string, result: any): void {
-    console.log('fire event', {eventName, result})
-    if (!(eventName in this.listeners)) {
+  fireEvent(submissionId: string, result: any): void {
+    const listener = this.submissionData[submissionId]?.listener;
+    if (listener) {
+      const {fn} = listener;
+      this.unregister(submissionId);
+      fn({longPollingResult: LongPollingHandlerResult.Event, result});
+    }
+
+    // Keep the result in the memory cache during 10 secs in case the client wants it again
+    // or if the event was fired between two pollings
+    this.submissionData[submissionId].pending = false;
+    this.submissionData[submissionId].result = result;
+    setTimeout(() => {
+      delete this.submissionData[submissionId];
+    }, 10000);
+  }
+
+  register(submissionId: string, timeoutId: NodeJS.Timeout, listener: Function): void {
+    this.submissionData[submissionId] ||= {};
+    this.submissionData[submissionId].listener = {fn: listener, timeoutId};
+  }
+
+  unregister(submissionId: string): void {
+    const listener = this.submissionData[submissionId].listener;
+    if (!listener) {
       return;
     }
 
-    const {fn} = this.listeners[eventName];
-    this.unregister(eventName);
-    fn({longPollingResult: LongPollingHandlerResult.Event, result});
-  }
-
-  register(eventName: string, timeoutId: NodeJS.Timeout, listener: Function): void {
-    this.listeners[eventName] = {fn: listener, timeoutId};
-  }
-
-  unregister(eventName: string): void {
-    const {timeoutId} = this.listeners[eventName];
-    clearTimeout(timeoutId);
-    delete this.listeners[eventName];
+    clearTimeout(listener.timeoutId);
+    this.submissionData[submissionId].listener = undefined;
   }
 }
 
