@@ -55,13 +55,13 @@ export default {
                 }
             });
         },
-        generateText: function(args: {task: TaskArg, prompt: string, model: string, jsonSchema?: object, systemInstructions?: string}, callback: GenericCallback) {
+        generateText: function(args: {task: TaskArg, prompt: string, model: string, jsonSchema?: object, systemInstructions?: string, promptCacheKey?: string}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if (error) return callback(error);
 
                 try {
                     const generationId = generateGenerationIdFromPrompt(JSON.stringify({
-                        prompt: args.prompt,
+                        prompt: args.promptCacheKey ?? args.prompt,
                         model: args.model,
                         jsonSchema: args.jsonSchema,
                         systemInstructions: args.systemInstructions,
