@@ -25,10 +25,42 @@ export async function geminiGenerateTextFromPrompt(input: string, model: string,
   return response.text;
 }
 
+export function findClosestAspectRatio(width: number, height: number, aspectRatios: string[]) {
+  const targetRatio = width / height;
+
+  let bestMatch = null;
+  let smallestDiff = Infinity;
+
+  for (const label of aspectRatios) {
+    const [w, h] = label.split(":").map(Number);
+    const ratio = w / h;
+    const diff = Math.abs(targetRatio - ratio);
+
+    if (diff < smallestDiff) {
+      smallestDiff = diff;
+      bestMatch = label;
+    }
+  }
+
+  return bestMatch;
+}
+
 export async function geminiGenerateImageFromPrompt(input: string, model: string, size: string = '512x512'): Promise<string|undefined> {
+  const [width, height] = size.split('x').map(Number);
+  const aspectRatio = findClosestAspectRatio(width, height, [
+    "1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9"
+  ]);
+
   const response = await ai.models.generateContent({
-    model,
+    model: "gemini-3.1-flash-image-preview",
+    // model,
     contents: input,
+    config: {
+      imageConfig: {
+        // @ts-ignore
+        aspectRatio,
+      },
+    },
   });
 
   if (response?.candidates?.length && response?.candidates[0]?.content?.parts) {
