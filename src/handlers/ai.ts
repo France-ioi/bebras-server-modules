@@ -73,14 +73,9 @@ export default {
                         return;
                     }
 
-                    if (result) {
-                        callback(null, result);
-                        return;
-                    }
-
                     const text = await aiGenerator.generateText(args.prompt, args.model, args.jsonSchema, args.systemInstructions);
                     if (text) {
-                        await storeAIUsage(generationId, text);
+                        await storeAIUsage(generationId, text, obj!.config.cache_time);
                     }
 
                     callback(null, text);
@@ -127,8 +122,7 @@ export default {
 
                                 const imageUrl = storage.url(path);
 
-                                storeAIUsage(generationId, imageUrl);
-                                console.log('ok stored', {path, imageUrl});
+                                storeAIUsage(generationId, imageUrl, obj!.config.cache_time);
 
                                 callback(null, imageUrl);
                             })

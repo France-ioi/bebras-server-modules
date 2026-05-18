@@ -39,7 +39,7 @@ export async function requestNewAIUsage(taskId: string, tokenPayload: {idUser: s
 }
 
 export async function fetchGenerationIdFromCache(generationId: string): Promise<string|null> {
-  const sql = `SELECT generation_result FROM ai_generations_cache WHERE \`generation_id\` = ? LIMIT 1`
+  const sql = `SELECT generation_result FROM ai_generations_cache WHERE \`generation_id\` = ? AND (expires_at IS NULL OR NOW() <= expires_at) LIMIT 1`
   const values = [generationId];
   const rows = await db.queryAsync<{generation_result: string}[]>(sql, values);
   if (0 === rows.length) {
@@ -49,13 +49,20 @@ export async function fetchGenerationIdFromCache(generationId: string): Promise<
   return rows[0].generation_result;
 }
 
-export async function storeAIUsage(generationId: string, result: string): Promise<void> {
-  const sql = 'INSERT INTO `ai_generations_cache`\
-            (`generation_id`, `generation_result`)\
-            VALUES\
-            (?, ?)\
-            ON DUPLICATE KEY UPDATE\
-            `generation_result` = ?'
+export async function storeAIUsage(generationId: string, result: string, cacheTime: number|boolean|undefined): Promise<void> {
+  if (0 === cacheTime || false === cacheTime) {
+    return;
+  }
+
+  const newExpiresAt = cacheTime ? `NOW() + INTERVAL ${Number(cacheTime)} SECOND` : `NULL`;
+
+  const sql = `
+    INSERT INTO \`ai_generations_cache\`
+      (\`generation_id\`, \`generation_result\`, \`expires_at\`)
+    VALUES
+      (?, ?, ${newExpiresAt})
+    ON DUPLICATE KEY UPDATE
+      \`generation_result\` = ?, \`expires_at\` = ${newExpiresAt}`
   const values = [generationId, result, result];
 
   await db.queryAsync(sql, values);

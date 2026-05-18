@@ -83,6 +83,7 @@ export interface TaskObject {
 export interface TaskConfig {
   template?: boolean;
   cache_task_data: boolean;
+  cache_time?: number|boolean;
   ai_quota: AIQuotaConfig;
 }
 
