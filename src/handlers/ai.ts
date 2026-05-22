@@ -12,6 +12,7 @@ import storage from "../libs/storage";
 import base64parser from "../libs/base64parser";
 import uuid from "uuid";
 import {Anthropic} from "@anthropic-ai/sdk";
+import {generateText} from "ai";
 
 export default {
     path: '/ai',
@@ -75,7 +76,10 @@ export default {
                         return;
                     }
 
-                    const text = (await aiGenerator.generateText(args.prompt, args.model, args.jsonSchema, args.systemInstructions)) as unknown as string;
+                    const generateOptions = aiGenerator.buildGenerateTextOptions(args.prompt, args.model, args.jsonSchema, args.systemInstructions);
+                    const generationResult = await generateText(generateOptions);
+                    const text = generationResult.text;
+
                     if (text) {
                         await storeAIUsage(generationId, text, obj!.config.cache_time);
                     }

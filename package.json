@@ -4,8 +4,10 @@
   "description": "Server-side modules to be used by bebras tasks",
   "main": "index.js",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.96.0",
-    "@unified-llm/core": "^0.6.9",
+    "@ai-sdk/anthropic": "^3.0.78",
+    "@ai-sdk/google": "^3.0.79",
+    "@ai-sdk/openai": "^3.0.65",
+    "ai": "^6.0.190",
     "async": "^2.6.0",
     "aws-sdk": "^2.141.0",
     "body-parser": "^1.18.3",
