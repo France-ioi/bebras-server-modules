@@ -128,12 +128,13 @@ export default async function(app: Express, name: string) {
             if(error) {
                 return res.json(resultError(error))
             }
+
             handler.actions[action](args, (error: any, data: string) => {
                 if(error) {
                     return res.json(resultError(error))
                 }
                 res.json(resultSuccess(data))
-            })
+            }, res);
         })
     })
     if(handler.static) {

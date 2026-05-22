@@ -2,29 +2,6 @@ import {GoogleGenAI} from "@google/genai";
 
 const ai = new GoogleGenAI({});
 
-export async function geminiGenerateTextFromPrompt(input: string, model: string, jsonSchema: object|null, systemInstructions: string|null): Promise<string> {
-  const response = await ai.models.generateContent({
-    model,
-    contents: input,
-    config: {
-      ...(jsonSchema ? {
-        responseJsonSchema: jsonSchema,
-      } : {}),
-      ...(systemInstructions ? {
-        systemInstruction: [
-          systemInstructions,
-        ],
-      } : {}),
-    },
-  });
-
-  if (!response.text) {
-    throw new Error("AI model returned no text from prompt.");
-  }
-
-  return response.text;
-}
-
 export function findClosestAspectRatio(width: number, height: number, aspectRatios: string[]) {
   const targetRatio = width / height;
 
@@ -52,8 +29,7 @@ export async function geminiGenerateImageFromPrompt(input: string, model: string
   ]);
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.1-flash-image-preview",
-    // model,
+    model,
     contents: input,
     config: {
       imageConfig: {

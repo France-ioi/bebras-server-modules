@@ -1,17 +1,19 @@
 import {openAIGenerateImageFromPrompt} from "./dall_e";
-import {openAIGenerateTextFromPrompt, getOpenAIEmbedding} from "./openai";
+import {getOpenAIEmbedding} from "./openai";
 import {replicateGenerateImageFromPrompt} from "./replicate";
-import {geminiGenerateImageFromPrompt, geminiGenerateTextFromPrompt} from "./gemini";
-import {claudeGenerateTextFromPrompt} from "./claude";
+import {geminiGenerateImageFromPrompt} from "./gemini";
+import {igniteModel, loadModels, ModelsList} from "multi-llm-ts";
+import {callAgent} from "@unified-llm/core";
+import {AgentProviderType} from "@unified-llm/core/dist/call-agent";
 
-export type TextGenerator = (prompt: string, model: string, jsonSchema: object|null, systemInstructions: string|null) => Promise<string|undefined>;
+export type TextGenerator = {providerName: string, apiKey: string};
 export type ImageGenerator = (prompt: string, model: string, size: string) => Promise<string|undefined>;
 export type EmbeddingGenerator = (input: string, model: string) => Promise<number[]>;
 
 const availableTextProviders: Record<string, TextGenerator> = {
-  'openai': openAIGenerateTextFromPrompt,
-  'gemini': geminiGenerateTextFromPrompt,
-  'anthropic': claudeGenerateTextFromPrompt,
+  'openai': {apiKey: process.env['OPENAI_API_KEY'] || '', providerName: 'openai'},
+  'gemini': {apiKey: process.env['GEMINI_API_KEY'] || '', providerName: 'google'},
+  'anthropic': {apiKey: process.env['ANTHROPIC_API_KEY'] || '', providerName: 'anthropic'},
 };
 
 const availableImageProviders: Record<string, ImageGenerator> = {
@@ -39,16 +41,61 @@ class AIGenerator {
       model: providerModel.join('/'),
     };
   }
-  public async generateText(prompt: string, model: string, jsonSchema: object|null = null, systemInstructions: string|null = null) {
+  public async generateText(prompt: string|any[], model: string, jsonSchema: object|null = null, systemInstructions: string|null = null, stream: boolean = false) {
     const modelInfo = this.extractModelInfo(model);
     if (!(modelInfo.provider in availableModelProviders.text)) {
       throw new Error(`This provider is not supported for text generation: ${modelInfo.provider}.`);
     }
 
-    const generator = availableModelProviders.text[modelInfo.provider];
+    const {apiKey, providerName} = availableModelProviders.text[modelInfo.provider];
 
-    return await generator(prompt, modelInfo.model, jsonSchema, systemInstructions);
+    // console.log({jsonSchema, prompt, provider: modelInfo.provider, providerName});
+
+    const config = { apiKey };
+    const models = await loadModels(providerName, config);
+    const chatModel = models!.chat.find(m => m.id === modelInfo.model);
+    if (!chatModel) {
+      throw new Error(`Chat model not found: ${modelInfo.model}`);
+    }
+
+    // const llmModel = igniteModel(providerName, chatModel, {
+    //   apiKey: process.env.OPENAI_API_KEY,
+    // })
+
+    // const streamResult = llmModel.generate(Array.isArray(prompt) ? prompt: [{role: 'user', content: prompt}])
+
+
+    const result = await callAgent({
+      apiKey,
+      provider: providerName as AgentProviderType,
+      model: modelInfo.model,
+      ...(jsonSchema ? {
+        structuredOutput: {
+          format: {
+            type: 'json_schema',
+            name: 'schema',
+            schema: jsonSchema,
+          }
+        }
+      } : {}),
+      baseInput: [
+        ...(systemInstructions ? [{role: 'system', content: systemInstructions}] : []),
+        ...(Array.isArray(prompt) ? prompt: [{role: 'user', content: prompt}]),
+      ],
+      isStream: stream,
+    });
+
+    return result.output as string;
+
+    // console.log({result})
+    //
+    // if (stream) {
+    //   return result;
+    // } else {
+    //   return result.output as string;
+    // }
   }
+
 
   public async getEmbedding(input: string, model: string) {
     const modelInfo = this.extractModelInfo(model);

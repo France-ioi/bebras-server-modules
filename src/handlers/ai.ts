@@ -11,6 +11,7 @@ import {
 import storage from "../libs/storage";
 import base64parser from "../libs/base64parser";
 import uuid from "uuid";
+import {Anthropic} from "@anthropic-ai/sdk";
 
 export default {
     path: '/ai',
@@ -37,6 +38,7 @@ export default {
     params: {
         requestNewAiUsage: ['task'],
         generateText: ['task', 'prompt', 'model'],
+        streamTextClaudeFormat: ['task', 'model'],
         generateImage: ['task', 'prompt', 'model', 'size'],
         getEmbedding: ['task', 'prompt', 'model'],
     },
@@ -55,7 +57,7 @@ export default {
                 }
             });
         },
-        generateText: function(args: {task: TaskArg, prompt: string, model: string, jsonSchema?: object, systemInstructions?: string, promptCacheKey?: string}, callback: GenericCallback) {
+        generateText: function(args: {task: TaskArg, prompt: string, model: string, jsonSchema?: object, systemInstructions?: string, promptCacheKey?: string, stream?: boolean}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if (error) return callback(error);
 
@@ -73,7 +75,7 @@ export default {
                         return;
                     }
 
-                    const text = await aiGenerator.generateText(args.prompt, args.model, args.jsonSchema, args.systemInstructions);
+                    const text = (await aiGenerator.generateText(args.prompt, args.model, args.jsonSchema, args.systemInstructions)) as unknown as string;
                     if (text) {
                         await storeAIUsage(generationId, text, obj!.config.cache_time);
                     }
@@ -88,8 +90,6 @@ export default {
         generateImage: function(args: {task: TaskArg, prompt: string, model: string, size: string}, callback: GenericCallback) {
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if(error) return callback(error)
-
-                console.log('obj', obj!.config);
 
                 try {
                     const generationId = generateGenerationIdFromPrompt(args.prompt);
@@ -130,6 +130,130 @@ export default {
                     } else {
                         throw new Error("No image generated");
                     }
+                } catch (e) {
+                    console.error(e);
+                    callback(e);
+                }
+            });
+        },
+        streamTextClaudeFormat: function(args: {task: TaskArg, messages: any[], model: string, system: any[]}, callback: GenericCallback, res: any) {
+            loadTask(args.task.id, 'taskData', async (error, obj) => {
+                if (error) return callback(error);
+
+                try {
+                    await requestNewAIUsage(args.task.id, args.task.payload, obj!.config.ai_quota);
+
+                    const generationId = generateGenerationIdFromPrompt(JSON.stringify({
+                        prompt: args.messages,
+                        model: args.model,
+                    }));
+
+                    const result = await fetchGenerationIdFromCache(generationId);
+                    if (result) {
+                        callback(null, result);
+                        return;
+                    }
+
+                    // @ts-ignore
+                    const claudeArgs = {
+                        ...args,
+                    };
+                    // @ts-ignore
+                    delete claudeArgs.task;
+                    // @ts-ignore
+                    delete claudeArgs.action;
+
+                    const client = new Anthropic({
+                        apiKey: process.env['ANTHROPIC_API_KEY'],
+                    });
+
+                    // @ts-ignore
+                    const stream = client.messages.stream(claudeArgs);
+
+                    // const model = 'openai/gpt-4o';
+                    // // const model = `anthropic/${args.model}`;
+                    // const prompts = args.messages.map(message => {
+                    //     return {
+                    //         ...message,
+                    //         toolCalls: [],
+                    //     };
+                    // })
+                    // const systemInstructions = args.system[0].text;
+
+                    res.writeHead(200, {
+                        'Content-Type': 'text/event-stream',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive',
+                    });
+
+                    // const response = await aiGenerator.generateText(prompts, model, null, systemInstructions, true);
+                    // console.log({response});
+
+                    const sendEvent = (eventName: string, data: object) => {
+                        res.write(`event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`);
+                    }
+
+                    for await (const event of stream) {
+                        console.log('send event');
+                        sendEvent(event.type, event);
+                    }
+
+                    setTimeout(() => {
+                        console.log('end stream');
+                        res.end();
+                    }, 500);
+
+                    // sendEvent('message_start', {
+                    //     type: 'message_start',
+                    // });
+
+                    // let acc = '';
+                    // for await (const chunk of response) {
+                    //     console.log({chunk});
+                        // switch (ev.eventType) {
+                        //     case 'start':
+                        //         sendEvent('content_block_start', {
+                        //             type: 'content_block_start',
+                        //             index: ev.outputIndex,
+                        //             content_block: {
+                        //                 type: 'text',
+                        //                 text: '',
+                        //             },
+                        //         });
+                        //     break;
+                        //     case 'text_delta':
+                        //         // ev.delta?.text is the incremental piece; ev.text is the accumulator
+                        //         sendEvent('content_block_delta', {
+                        //             type: 'content_block_delta',
+                        //             index: ev.outputIndex,
+                        //             delta: {
+                        //                 type: 'text_delta',
+                        //                 // @ts-ignore
+                        //                 text: ev.delta.text,
+                        //             }
+                        //         })
+                        //         break;
+                        //     case 'stop':
+                        //         sendEvent('content_block_stop', {
+                        //             type: 'content_block_stop',
+                        //             index: ev.outputIndex,
+                        //         });
+                        //         // sendEvent('message_stop', {
+                        //         //     type: 'message_stop',
+                        //         // });
+                        //         res.end();
+                        //         // ev.rawResponse contains provider-native final response (or stream data)
+                        //         break;
+                        //     case 'error':
+                        //         console.error('Stream error:', ev.delta);
+                        //         break;
+                        // }
+                    // }
+
+                    // TODO: cache
+                    // if (text) {
+                    //     await storeAIUsage(generationId, text, obj!.config.cache_time);
+                    // }
                 } catch (e) {
                     console.error(e);
                     callback(e);

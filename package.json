@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
+    "@unified-llm/core": "^0.6.9",
     "async": "^2.6.0",
     "aws-sdk": "^2.141.0",
     "body-parser": "^1.18.3",
@@ -16,6 +17,7 @@
     "lodash": "^4.17.4",
     "mime": "^2.0.3",
     "mri": "^1.1.0",
+    "multi-llm-ts": "^5.1.0-beta4",
     "mysql": "^2.15.0",
     "mysql-migrations": "^1.0.4",
     "openai": "^6.16.0",
