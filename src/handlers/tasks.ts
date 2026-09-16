@@ -21,6 +21,7 @@ async function loadTaskData(obj: any, args: {task: TaskArg}, callback: GenericCa
         try {
             await obj.taskData(args, callback)
         } catch (ex) {
+            console.error(ex);
             callback(ex);
         }
         return;
