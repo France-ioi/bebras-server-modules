@@ -50,6 +50,29 @@ npx pm2 start --no-daemon --watch tasks/enigma/ dist/server.js --name bsm-tasks 
 
 Adapt the watched path to the task you're working on.
 
+## AI admin panel
+
+An HTML admin panel to inspect AI tasks and their cached generations is served by the `ai`
+handler, on the same process and port, under `/ai/admin` :
+
+* `/ai/admin` : search field, and the latest AI generations across all tasks. The search accepts a
+  task path (looked up as `quiz-` + md5 of the path), a task id, or a `task_dir` as stored by the
+  quiz `write` action ; on an exact match you are redirected straight to the task page, otherwise
+  you get the task ids and task dirs matching the query
+* `/ai/admin/task/TASK_ID` : task source, resolved template, effective config, quota usage and the
+  list of that task's cached generations
+* `/ai/admin/task/TASK_ID/generation/GENERATION_ID` : one cached generation — prompt, model,
+  user and platform, expiry, and the result (images are rendered inline)
+
+With the default ports, the panel is at `http://your.server:3104/ai/admin`.
+
+It is protected by HTTP Basic Auth, configured with the `ADMIN_USER` and `ADMIN_PASSWORD`
+variables of the `.env` file. **If either is missing, the panel answers `503` and serves
+nothing** — it never falls back to being open. The panel is read-only.
+
+Since it shares the port with the public `/ai` endpoint, don't expose port 3104 directly if you
+would rather keep the panel private ; put it behind a reverse proxy and only expose `/ai`.
+
 ## Commands
 
 * Add task : `yarn cmd tasks:add TASK_ID TASK_PATH`

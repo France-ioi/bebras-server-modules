@@ -136,6 +136,9 @@ export default async function(app: Express, name: string) {
             })
         })
     })
+    if(handler.routes) {
+        handler.routes(app)
+    }
     if(handler.static) {
         app.use('/' + handler.static, express.static(handler.static))
     }

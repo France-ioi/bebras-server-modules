@@ -49,7 +49,16 @@ export async function fetchGenerationIdFromCache(generationId: string): Promise<
   return rows[0].generation_result;
 }
 
-export async function storeAIUsage(generationId: string, result: string, cacheTime: number|boolean|undefined): Promise<void> {
+export interface GenerationMeta {
+  taskId: string;
+  userId: string|null;
+  platformId: string|null;
+  prompt: string;
+  model: string;
+  type: 'text'|'image';
+}
+
+export async function storeAIUsage(generationId: string, result: string, cacheTime: number|boolean|undefined, meta: GenerationMeta): Promise<void> {
   if (0 === cacheTime || false === cacheTime) {
     return;
   }
@@ -58,14 +67,38 @@ export async function storeAIUsage(generationId: string, result: string, cacheTi
 
   const sql = `
     INSERT INTO \`ai_generations_cache\`
-      (\`generation_id\`, \`generation_result\`, \`expires_at\`)
+      (\`generation_id\`, \`generation_result\`, \`expires_at\`,
+       \`task_id\`, \`user_id\`, \`platform_id\`, \`prompt\`, \`model\`, \`generation_type\`, \`created_at\`)
     VALUES
-      (?, ?, ${newExpiresAt})
+      (?, ?, ${newExpiresAt},
+       ?, ?, ?, ?, ?, ?, NOW())
     ON DUPLICATE KEY UPDATE
-      \`generation_result\` = ?, \`expires_at\` = ${newExpiresAt}`
-  const values = [generationId, result, result];
+      \`generation_result\` = ?, \`expires_at\` = ${newExpiresAt},
+      \`task_id\` = ?, \`user_id\` = ?, \`platform_id\` = ?, \`prompt\` = ?, \`model\` = ?, \`generation_type\` = ?, \`created_at\` = NOW()`
+  const values = [
+    generationId, result,
+    meta.taskId, meta.userId, meta.platformId, meta.prompt, meta.model, meta.type,
+    result,
+    meta.taskId, meta.userId, meta.platformId, meta.prompt, meta.model, meta.type,
+  ];
 
   await db.queryAsync(sql, values);
+}
+
+/**
+ * Resolve the user and platform behind a task token, for cache metadata only.
+ * Never let a failure here break the generation itself.
+ */
+export async function resolveGenerationOwner(tokenPayload: {idUser: string, platformName: string}): Promise<{userId: string|null, platformId: string|null}> {
+  try {
+    const {userId, platform} = await tokens_api.extractUserAndPlatform(tokenPayload);
+
+    return {userId, platformId: platform.id};
+  } catch (e) {
+    console.error('Could not resolve generation owner', e);
+
+    return {userId: null, platformId: null};
+  }
 }
 
 function checkUserAllowed(aiGenerationRow: AiGenerationRow, aiQuotaConfig: AIQuotaConfig): void {

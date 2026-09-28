@@ -6,14 +6,19 @@ import {
     fetchGenerationIdFromCache,
     generateGenerationIdFromPrompt,
     requestNewAIUsage,
+    resolveGenerationOwner,
     storeAIUsage
 } from "../libs/ai";
+import registerAdminRoutes from "../libs/admin/routes";
 import storage from "../libs/storage";
 import base64parser from "../libs/base64parser";
 import uuid from "uuid";
 
 export default {
     path: '/ai',
+
+    routes: registerAdminRoutes,
+
     validators: {
         task: function(v: string, callback: GenericCallback) {
             tokens_api.verify(v, (error) => {
@@ -75,7 +80,15 @@ export default {
 
                     const text = await aiGenerator.generateText(args.prompt, args.model, args.jsonSchema, args.systemInstructions);
                     if (text) {
-                        await storeAIUsage(generationId, text, obj!.config.cache_time);
+                        const {userId, platformId} = await resolveGenerationOwner(args.task.payload);
+                        await storeAIUsage(generationId, text, obj!.config.cache_time, {
+                            taskId: args.task.id,
+                            userId,
+                            platformId,
+                            prompt: args.prompt,
+                            model: args.model,
+                            type: 'text',
+                        });
                     }
 
                     callback(null, text);
@@ -89,8 +102,6 @@ export default {
             loadTask(args.task.id, 'taskData', async (error, obj) => {
                 if(error) return callback(error)
 
-                console.log('obj', obj!.config);
-
                 try {
                     const generationId = generateGenerationIdFromPrompt(args.prompt);
 
@@ -101,9 +112,10 @@ export default {
                     }
 
                     let image = await aiGenerator.generateImage(args.prompt, args.model, args.size);
-                    console.log({image})
 
                     if (image) {
+                        const {userId, platformId} = await resolveGenerationOwner(args.task.payload);
+
                         image = `data:image/jpeg;base64,${image}`;
 
                         base64parser.createBuffer(image, (error, file) => {
@@ -112,7 +124,6 @@ export default {
                             }
 
                             const path = args.task.id + '/' + uuid.v4() + '.' + file.ext;
-                            console.log({path}, file);
 
                             storage.write(path, file.buffer, (error: any) => {
                                 if (error) {
@@ -122,7 +133,14 @@ export default {
 
                                 const imageUrl = storage.url(path);
 
-                                storeAIUsage(generationId, imageUrl, obj!.config.cache_time);
+                                storeAIUsage(generationId, imageUrl, obj!.config.cache_time, {
+                                    taskId: args.task.id,
+                                    userId,
+                                    platformId,
+                                    prompt: args.prompt,
+                                    model: args.model,
+                                    type: 'image',
+                                }).catch((error) => console.error('Could not cache generation', error));
 
                                 callback(null, imageUrl);
                             })

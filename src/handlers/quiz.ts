@@ -114,8 +114,8 @@ export default {
 
     actions: {
 
-        write: function(args: {task_id: string, data: string}, callback: GenericCallback) {
-            graderData.write(args.task_id, args.data, callback)
+        write: function(args: {task_id: string, data: string, task_dir?: string}, callback: GenericCallback) {
+            graderData.write(args.task_id, args.data, args.task_dir ?? null, callback)
         },
 
 

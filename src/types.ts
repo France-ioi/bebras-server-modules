@@ -19,6 +19,7 @@ export interface GraderRow {
   id: string;
   task_id: string;
   data: string;
+  task_dir: string|null;
 }
 
 export interface DataRow {
@@ -70,6 +71,20 @@ export interface AiGenerationRow {
   generations: number;
   last_generation_date: string;
   last_generation_id: string;
+}
+
+export interface AiGenerationCacheRow {
+  id: string;
+  generation_id: string;
+  generation_result: string;
+  expires_at: string|null;
+  task_id: string|null;
+  user_id: string|null;
+  platform_id: string|null;
+  prompt: string|null;
+  model: string|null;
+  generation_type: string|null;
+  created_at: string|null;
 }
 
 export interface TaskObject {
