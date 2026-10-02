@@ -53,7 +53,7 @@ function formatDate(value: string|null): string {
 }
 
 const STYLE = `
-    :root { color-scheme: light dark; }
+    :root { color-scheme: dark; }
     body { margin: 0; font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
     header { padding: 12px 24px; background: #1f2933; color: #fff; display: flex; align-items: baseline; gap: 16px; }
     header a { color: #fff; text-decoration: none; font-weight: 600; }
