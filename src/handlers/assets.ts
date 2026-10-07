@@ -1,16 +1,12 @@
-import db from '../libs/db';
 import uuid from 'uuid';
 import storage from '../libs/storage';
 import base64parser from '../libs/base64parser';
 import tokens_api from '../libs/tokens_api';
+import assets from '../repositories/assets';
 import {AssetRow, GenericCallback, TaskArg} from "../types";
 
 function get(args: {task: TaskArg, key: string}, callback: (row: AssetRow|null) => void) {
-    const sql = 'SELECT * FROM `assets` WHERE `task_id`=? AND `random_seed` = ? AND `key`=? LIMIT 1'
-    const values = [args.task.id, args.task.random_seed, args.key]
-    db.query<AssetRow[]>(sql, values, (rows) => {
-        callback(rows.length ? rows[0] : null)
-    })
+    assets.find(args.task.id, args.task.random_seed, args.key).then(callback)
 }
 
 
@@ -57,16 +53,8 @@ export default {
                             if(error) {
                                 return callback(error)
                             }
-                            const sql = 'INSERT INTO `assets`\
-                                (`task_id`, `random_seed`, `key`, `path`)\
-                                VALUES\
-                                (?, ?, ?, ?)\
-                                ON DUPLICATE KEY UPDATE\
-                                `path` = ?'
-                            const values = [args.task.id, args.task.random_seed, args.key, path, path]
-                            db.query(sql, values, () => {
-                                callback(false, storage.url(path))
-                            })
+                            assets.upsert(args.task.id, args.task.random_seed, args.key, path)
+                                .then(() => callback(false, storage.url(path)), callback)
                         })
                     })
                 })
@@ -85,11 +73,8 @@ export default {
             get(args, (row) => {
                 if(row) {
                     storage.remove(row.path, () => {
-                        const sql = 'DELETE FROM `assets` WHERE `task_id`=? AND `random_seed`=? AND `key`=? LIMIT 1'
-                        const values = [args.task.id, args.task.random_seed, args.key]
-                        db.query(sql, values, () => {
-                            callback()
-                        })
+                        assets.delete(args.task.id, args.task.random_seed, args.key)
+                            .then(() => callback(), callback)
                     })
                 } else {
                     callback()
@@ -101,11 +86,7 @@ export default {
                 if(error) {
                     return callback(error)
                 }
-                const sql = 'DELETE FROM `assets` WHERE `task_id`=?'
-                const values = [args.task.id]
-                db.query(sql, values, () => {
-                    callback()
-                })
+                assets.empty(args.task.id).then(() => callback(), callback)
             })
         }
     },

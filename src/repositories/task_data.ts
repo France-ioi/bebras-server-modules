@@ -46,6 +46,26 @@ export default {
             callback()
         })
     },
+    readAsync: async function(task_id: string, random_seed: number, key: string): Promise<any> {
+        const sql = 'SELECT `value` FROM `data` WHERE `task_id`=? AND `random_seed`=? AND `key`=? LIMIT 1'
+        const rows = await db.queryAsync<DataRow[]>(sql, [task_id, random_seed, key])
+
+        return rows.length ? JSON.parse(rows[0].value) : null
+    },
+    writeAsync: async function(task_id: string, random_seed: number, key: string, value: any, duration: number = 0): Promise<void> {
+        const sql = 'INSERT INTO `data`\
+            (`task_id`, `random_seed`, `key`, `value`, `duration`)\
+            VALUES\
+            (?, ?, ?, ?, ?)\
+            ON DUPLICATE KEY UPDATE\
+            `value` = ?, `duration` = ?'
+        const value_str = JSON.stringify(value)
+        await db.queryAsync(sql, [task_id, random_seed, key, value_str, duration, value_str, duration])
+    },
+    deleteAsync: async function(task_id: string, random_seed: number, key: string): Promise<void> {
+        const sql = 'DELETE FROM `data` WHERE `task_id`=? AND `random_seed`=? AND `key`=? LIMIT 1'
+        await db.queryAsync(sql, [task_id, random_seed, key])
+    },
     empty: function(task: TaskArg, callback: GenericCallback) {
         const sql = 'DELETE FROM `data` WHERE `task_id`=?'
         const values = [task.id]

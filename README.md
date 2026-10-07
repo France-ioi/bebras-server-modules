@@ -52,15 +52,17 @@ Adapt the watched path to the task you're working on.
 
 ## AI admin panel
 
-An HTML admin panel to inspect AI tasks and their cached generations is served by the `ai`
-handler, on the same process and port, under `/ai/admin` :
+An admin panel to inspect AI tasks, their cached generations and their task cache is served by the
+`ai` handler, on the same process and port, under `/ai/admin`. It is a React single-page app
+(sources in `admin/`, built by `yarn build` into `dist/admin`) talking to a JSON API under
+`/ai/admin/api` :
 
 * `/ai/admin` : search field, and the latest AI generations across all tasks. The search accepts a
   task path (looked up as `quiz-` + md5 of the path), a task id, or a `task_dir` as stored by the
   quiz `write` action ; on an exact match you are redirected straight to the task page, otherwise
   you get the task ids and task dirs matching the query
-* `/ai/admin/task/TASK_ID` : task source, resolved template, effective config, quota usage and the
-  list of that task's cached generations
+* `/ai/admin/task/TASK_ID` : task source, resolved template, effective config, quota usage, the
+  task cache (see below) and the list of that task's cached generations
 * `/ai/admin/task/TASK_ID/generation/GENERATION_ID` : one cached generation — prompt, model,
   user and platform, expiry, and the result (images are rendered inline)
 
@@ -68,10 +70,56 @@ With the default ports, the panel is at `http://your.server:3104/ai/admin`.
 
 It is protected by HTTP Basic Auth, configured with the `ADMIN_USER` and `ADMIN_PASSWORD`
 variables of the `.env` file. **If either is missing, the panel answers `503` and serves
-nothing** — it never falls back to being open. The panel is read-only.
+nothing** — it never falls back to being open. Write requests must be JSON and carry the
+`X-Requested-With: bsm-admin` header sent by the panel, so they can't be forged cross-site.
 
 Since it shares the port with the public `/ai` endpoint, don't expose port 3104 directly if you
 would rather keep the panel private ; put it behind a reverse proxy and only expose `/ai`.
+
+To work on the front-end, run the `ai` handler and `yarn admin:dev` (Vite, proxying the API to
+`localhost:3104`, or to `ADMIN_API_URL`). The dev server asks for the same Basic Auth credentials
+before serving the page or its sources.
+
+### Task cache
+
+A task template module may export an `admin` object, shown in a "Task cache" section of the page of
+every task using that template (once per version of its grader data). The template defines the cache
+and its actions ; the grader data only brings the task's own prompts, which the actions read from
+`context.version.prompts` :
+
+```js
+export const admin = {
+    async getCacheElements(context) { return {schema, values}; },
+    actions: {
+        generate: {global: true, label: 'Generate', action: async (context) => { ... }},
+        editElement: {action: async (context, {id, value}) => { ... }},
+        deleteElement: {action: async (context, {id}) => { ... }},
+    },
+};
+```
+
+* `schema` is a JSON Schema subset describing the elements : its root is an `array` whose `items`
+  are rendered as cards, with `type` (`array`, `object`, `string`, `number`, `integer`, `boolean`),
+  `items`, `properties`, `title`, and the extra keywords `x-editable: true` (field editable in the
+  edit form), `x-hidden: true`, `format: 'image-url'` (thumbnail, full screen on click),
+  `format: 'textarea'`, and on the items `x-actions: {edit, delete}` (action ids)
+* element actions receive the element `id` (its `id` property, or its index) and, for edits, the
+  edited `value`
+* global actions are buttons ; they run in the background and may report `progress(percent, message)`
+* `context` provides `taskId`, `versionId`, `version`, `getTaskData` / `storeTaskData` /
+  `deleteTaskData(key)`, `generateText(prompt, model, {jsonSchema, systemInstructions})`,
+  `generateImage(prompt, model, size)` (a data URL), `storeTaskAsset(key, dataUrl)` (returns its
+  url), `getTaskAssetUrl(key)`, `deleteTaskAsset(key)`, `progress(percent, message)` and `log(message)`.
+  Admin generations bypass quotas and the generation cache
+
+The cache is stored task-wide in the `data` and `assets` tables, with `random_seed = 0`. Tasks can
+read it at runtime with the `readTaskCache` action of the `ai` handler (`task`, `key`), or run one of
+the template's `admin.loaders` with the `loadTaskCache` action (`task`, `version`, `name`). A loader
+gets the same context as the actions and decides itself what it reads and whether to generate it
+first (e.g. the situations of `ai-template-choices`, generated on the first request when they don't
+exist yet) ; concurrent calls of the same loader share a single run.
+Jobs are kept in memory : a job still running is lost when the `ai` process restarts, and finished
+jobs are forgotten after an hour.
 
 ## Commands
 

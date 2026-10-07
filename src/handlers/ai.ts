@@ -10,6 +10,8 @@ import {
     storeAIUsage
 } from "../libs/ai";
 import registerAdminRoutes from "../libs/admin/routes";
+import {loadTaskCache, TASK_CACHE_SEED} from "../libs/admin/task_cache";
+import taskData from "../repositories/task_data";
 import storage from "../libs/storage";
 import base64parser from "../libs/base64parser";
 import uuid from "uuid";
@@ -38,12 +40,26 @@ export default {
             const valid = v && v.length
             callback(!valid, v)
         },
+        key: function(v: string, callback: GenericCallback) {
+            const valid = 'string' === typeof v && v.length && v.length < 255
+            callback(!valid, v)
+        },
+        version: function(v: string|number, callback: GenericCallback) {
+            const valid = ('string' === typeof v || 'number' === typeof v) && String(v).length
+            callback(!valid, String(v))
+        },
+        name: function(v: string, callback: GenericCallback) {
+            const valid = 'string' === typeof v && v.length && v.length < 255
+            callback(!valid, v)
+        },
     },
     params: {
         requestNewAiUsage: ['task'],
         generateText: ['task', 'prompt', 'model'],
         generateImage: ['task', 'prompt', 'model', 'size'],
         getEmbedding: ['task', 'prompt', 'model'],
+        readTaskCache: ['task', 'key'],
+        loadTaskCache: ['task', 'version', 'name'],
     },
     actions: {
         requestNewAiUsage: function(args: {task: TaskArg}, callback: GenericCallback) {
@@ -153,6 +169,23 @@ export default {
                     callback(e);
                 }
             });
+        },
+        readTaskCache: async function(args: {task: TaskArg, key: string}, callback: GenericCallback) {
+            try {
+                callback(null, await taskData.readAsync(args.task.id, TASK_CACHE_SEED, args.key));
+            } catch (e) {
+                console.error(e);
+                callback(e);
+            }
+        },
+        /* Runs a loader of the task template's admin section, which may generate the cache first. */
+        loadTaskCache: async function(args: {task: TaskArg, version: string, name: string}, callback: GenericCallback) {
+            try {
+                callback(null, await loadTaskCache(args.task.id, args.version, args.name));
+            } catch (e) {
+                console.error(e);
+                callback(e);
+            }
         },
         getEmbedding: async function(args: {task: TaskArg, prompt: string, model: string}, callback: GenericCallback) {
             try {
