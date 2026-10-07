@@ -121,7 +121,8 @@ async function recent(): Promise<ApiRecentResponse> {
 }
 
 async function search(req: Request): Promise<ApiSearchResponse> {
-    const query = 'string' === typeof req.query.q ? req.query.q.trim() : ''
+    /* Task paths are stored and hashed without a trailing slash, but a copied folder path often ends with one. */
+    const query = 'string' === typeof req.query.q ? req.query.q.trim().replace(/\/+$/, '') : ''
     if (!query) {
         throw new AdminError('Empty search.')
     }

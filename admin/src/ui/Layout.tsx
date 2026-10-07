@@ -1,14 +1,11 @@
-import {ReactNode, useEffect} from 'react';
+import {ReactNode} from 'react';
 import {Link} from 'react-router';
 import type {ApiTaskHeading} from '../../../src/libs/admin/api_types';
 
+/* The browser title is always "AI Admin" (set in index.html) ; the page title shows in the header. */
 export function Layout({title, children}: {title: string, children: ReactNode}) {
-    useEffect(() => {
-        document.title = `${title} — AI admin`
-    }, [title])
-
     return <>
-        <header><Link to="/">AI admin</Link><span>{title}</span></header>
+        <header><Link to="/">AI Admin</Link><span>{title}</span></header>
         <main>{children}</main>
     </>
 }
