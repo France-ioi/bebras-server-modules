@@ -1,4 +1,4 @@
-import React from 'react';
+import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import {BrowserRouter, Route, Routes} from 'react-router';
 import SearchPage from './pages/SearchPage';
@@ -18,9 +18,9 @@ function App() {
 }
 
 createRoot(document.getElementById('root')!).render(
-    <React.StrictMode>
+    <StrictMode>
         <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
             <App/>
         </BrowserRouter>
-    </React.StrictMode>
+    </StrictMode>
 );

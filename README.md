@@ -109,12 +109,12 @@ export const admin = {
 * `context` provides `taskId`, `versionId`, `version`, `getTaskData` / `storeTaskData` /
   `deleteTaskData(key)`, `generateText(prompt, model, {jsonSchema, systemInstructions})`,
   `generateImage(prompt, model, size)` (a data URL), `storeTaskAsset(key, dataUrl)` (returns its
-  url), `getTaskAssetUrl(key)`, `deleteTaskAsset(key)`, `progress(percent, message)` and `log(message)`.
+  url), `deleteTaskAsset(key)`, `progress(percent, message)` and `log(message)`.
   Admin generations bypass quotas and the generation cache
 
-The cache is stored task-wide in the `data` and `assets` tables, with `random_seed = 0`. Tasks can
-read it at runtime with the `readTaskCache` action of the `ai` handler (`task`, `key`), or run one of
-the template's `admin.loaders` with the `loadTaskCache` action (`task`, `version`, `name`). A loader
+The cache is stored task-wide in the `data` and `assets` tables, with `random_seed = 0`. Tasks read
+it at runtime by running one of the template's `admin.loaders` with the `loadTaskCache` action of the
+`ai` handler (`task`, `version`, `name`). A loader
 gets the same context as the actions and decides itself what it reads and whether to generate it
 first (e.g. the situations of `ai-template-choices`, generated on the first request when they don't
 exist yet) ; concurrent calls of the same loader share a single run.

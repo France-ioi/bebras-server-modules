@@ -1,4 +1,3 @@
-import React from 'react';
 import {Link, useParams} from 'react-router';
 import type {ApiGenerationResponse} from '../../../src/libs/admin/api_types';
 import {generationPath, taskPath, useApi} from '../api';

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import {useState} from 'react';
 import {CacheSchema, elementId} from './schema';
 import {SchemaView} from './SchemaView';
 import {SchemaForm} from './SchemaForm';

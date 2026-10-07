@@ -8,7 +8,7 @@ import {getJob, Job, JobHooks, startJob} from './jobs';
 import {AdminVersion, loadAdminVersions} from './task_info';
 
 /* The task-wide cache lives in the `data` and `assets` tables, under this fixed seed. */
-export const TASK_CACHE_SEED = 0
+const TASK_CACHE_SEED = 0
 
 export class AdminError extends Error {
     constructor(message: string, public readonly status: number = 400) {
@@ -40,7 +40,7 @@ const NO_HOOKS: JobHooks = {
 }
 
 /* What the admin functions of the grader data are given. Everything is async. */
-export function buildContext(task_id: string, version_id: string, version: any, hooks: JobHooks = NO_HOOKS) {
+function buildContext(task_id: string, version_id: string, version: any, hooks: JobHooks = NO_HOOKS) {
     async function deleteTaskAsset(key: string): Promise<void> {
         const row = await assets.find(task_id, TASK_CACHE_SEED, key)
         if (!row) {
@@ -89,11 +89,6 @@ export function buildContext(task_id: string, version_id: string, version: any, 
             }
 
             return storage.url(path)
-        },
-        getTaskAssetUrl: async (key: string): Promise<string|null> => {
-            const row = await assets.find(task_id, TASK_CACHE_SEED, key)
-
-            return row ? storage.url(row.path) : null
         },
         deleteTaskAsset,
 

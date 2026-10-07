@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+import {useEffect, useRef} from 'react';
 
 /* Full-screen viewer : closes on Esc, on the ✕ button, or on a click outside the image.
    A modal <dialog> so it also stacks above an open edit dialog (both live in the top layer). */

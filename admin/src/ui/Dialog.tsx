@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useRef} from 'react';
+import {ReactNode, useEffect, useRef} from 'react';
 
 /* Native modal <dialog> : Esc closes it (through onClose), focus is trapped by the browser. */
 export function Dialog({title, onClose, children, footer, wide = false}: {title: string, onClose: () => void, children: ReactNode, footer: ReactNode, wide?: boolean}) {

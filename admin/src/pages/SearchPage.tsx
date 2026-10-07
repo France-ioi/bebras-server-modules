@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Link, useNavigate, useSearchParams} from 'react-router';
 import type {ApiRecentResponse, ApiSearchResponse} from '../../../src/libs/admin/api_types';
 import {taskPath, useApi} from '../api';

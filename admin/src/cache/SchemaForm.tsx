@@ -1,4 +1,3 @@
-import React from 'react';
 import {CacheSchema, defaultValue, fieldLabel, hasEditable, visibleProperties} from './schema';
 import {SchemaView, Thumbnail} from './SchemaView';
 

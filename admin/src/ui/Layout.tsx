@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect} from 'react';
+import {ReactNode, useEffect} from 'react';
 import {Link} from 'react-router';
 import type {ApiTaskHeading} from '../../../src/libs/admin/api_types';
 

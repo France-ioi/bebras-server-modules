@@ -1,10 +1,9 @@
-import React from 'react';
 import {Link} from 'react-router';
 import type {ApiGeneration} from '../../../src/libs/admin/api_types';
 import {generationPath, taskPath} from '../api';
 import {Empty} from './Layout';
 
-export function truncate(value: string|null, length: number): string {
+function truncate(value: string|null, length: number): string {
     if (!value) {
         return ''
     }

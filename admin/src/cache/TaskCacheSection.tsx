@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import type {ApiAdminVersion, ApiCacheResponse, ApiJob, ApiJobResponse, ApiJobsResponse} from '../../../src/libs/admin/api_types';
 import {apiGet, apiPost, followJob, runAction, taskPath, useApi} from '../api';
 import {Loading, Warning} from '../ui/Layout';

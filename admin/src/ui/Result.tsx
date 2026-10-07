@@ -1,4 +1,3 @@
-import React from 'react';
 import {Empty} from './Layout';
 
 const IMAGE_URL = /^https?:\/\/[^\s"'<>]+\.(png|jpe?g|webp|gif|svg)(\?[^\s"'<>]*)?$/i

@@ -1,4 +1,3 @@
-import React from 'react';
 import {CacheSchema, fieldLabel, isPrimitive, optionTitle, visibleProperties} from './schema';
 
 function Missing() {

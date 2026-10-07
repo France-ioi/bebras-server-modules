@@ -1,4 +1,3 @@
-import React from 'react';
 import {Link, useParams} from 'react-router';
 import type {ApiTaskResponse} from '../../../src/libs/admin/api_types';
 import {taskPath, useApi} from '../api';
