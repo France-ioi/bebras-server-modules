@@ -37,12 +37,20 @@
     "@types/lodash": "^4.17.19",
     "@types/mysql": "^2.15.27",
     "@types/node": "^24.0.7",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
     "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router": "^7",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vite": "^7"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p admin && vite build -c admin/vite.config.mts",
+    "admin:dev": "vite -c admin/vite.config.mts",
     "cmd": "node dist/command.js",
     "migrate": "node dist/migrate.js up",
     "test": "echo \"Error: no test specified\" && exit 1"
